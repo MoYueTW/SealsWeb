@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>海豹旋轉振動 + 拋物線💩 + 放屁音效 + 重置</title>
+  <style>
+    /* 讓整頁置中 */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #fafafa;
+    }
+
+    /* 外層容器: 同時放置「動態彩虹按鈕」與「海豹」 */
+    .wrapper {
+      position: relative;
+      width: 250px; /* 按鈕寬度 */
+      height: 80px; /* 按鈕高度 */
+    }
+
+    /* ===== 彩虹按鈕: 只呈現彩虹邊框 + Glow 效果 ===== */
+    .rainbow-button {
+      position: absolute; 
+      top: 0; 
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;       
+      background: transparent;  /* 透明 (或可改白色) */
+      border-radius: 9999px;    /* 橢圓形 */
+      cursor: pointer;
+      z-index: 0;               /* 在海豹下方 */
+      outline: none;
+    }
+    /* 使用偽元素 ::before 製作動態彩虹邊框 */
+    .rainbow-button::before {
+      content: "";
+      position: absolute;
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      bottom: 0;
+      border-radius: inherit; /* 與本體同樣橢圓角 */
+      padding: 3px;           /* 辨識「框」的厚度 */
+
+      /* 彩虹漸層 (單向向右流動) */
+      background: linear-gradient(to right,
+        red, orange, yellow, green, blue, indigo, violet
+      );
+      background-size: 200% 100%;
+      animation: rainbowFlow 3s linear infinite;
+
+      /* 只留下「邊框」區域 (中間挖空) */
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+
+      /* 發光效果 (Glow) */
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+    }
+    /* 彩虹從左向右不斷流動（單向） */
+    @keyframes rainbowFlow {
+      0% {
+        background-position: 0% 0%;
+      }
+      100% {
+        background-position: 100% 0%;
+      }
+    }
+
+    /* 按鈕被點擊後的「放大 + 淡出」動畫 */
+    @keyframes scaleAndFadeBtn {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.4);
+        opacity: 0;
+      }
+    }
+    .fade-out {
+      animation: scaleAndFadeBtn 1s forwards;
+    }
+
+    /* ===== 海豹部分 (三層) ===== */
+    .seal-outer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1; /* 在按鈕上方 */
+    }
+    /* seal-shake: 負責抖動動畫 (避免 transform 覆蓋置中) */
+    .seal-shake {
+      display: inline-block;
+    }
+    /* seal-inner: 負責旋轉 + 放大 */
+    .seal-inner {
+      display: inline-block;
+      transform-origin: center center;
+      font-size: 40px;   /* Emoji大小 */
+    }
+
+    /* 旋轉 + 放大 (1→2) 在 3秒內 + 360度 */
+    @keyframes spinAndGrow {
+      0% {
+        transform: scale(1) rotate(0deg);
+      }
+      100% {
+        transform: scale(2) rotate(360deg);
+      }
+    }
+    .spin-and-grow {
+      animation: spinAndGrow 3s forwards;
+    }
+    /* 不斷抖動 */
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 0); }
+      20%, 40%, 60%, 80% { transform: translate(5px, 0); }
+    }
+    .shaking {
+      animation: shake 0.1s infinite;
+    }
+
+    /* ===== 💩 拋物線動畫 ===== */
+    .poop-emoji {
+      position: absolute;
+      font-size: 30px;   /* 大小可自行調整 */
+      left: 40px;        /* 大約在海豹右下角 (可自行微調) */
+      top: 10px;
+      animation: poopFly 1.5s forwards; /* 拋物線 1.5 秒 */
+    }
+    @keyframes poopFly {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(75px, -40px) scale(1.2); /* 中途往上拋 */
+      }
+      100% {
+        transform: translate(150px, 50px) scale(0.8); /* 結尾往右下 */
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- RGB & Glow 按鈕 -->
+  <button class="rainbow-button" id="rainbowBtn"></button>
+
+  <!-- 海豹 (三層)：outer定位，shake負責抖動，inner負責旋轉放大 -->
+  <div class="seal-outer">
+    <div class="seal-shake" id="sealShake">
+      <div class="seal-inner" id="sealInner">🦭</div>
+    </div>
+  </div>
+</div>
+
+<!-- 放屁聲音效，請改成你有的 mp3 或外部URL -->
+<audio id="fartSound" src="fart.mp3"></audio>
+
+<script>
+  const rainbowBtn = document.getElementById('rainbowBtn');
+  const sealShake  = document.getElementById('sealShake');
+  const sealInner  = document.getElementById('sealInner');
+  const fartSound  = document.getElementById('fartSound');
+
+  // 點擊海豹時觸發
+  sealInner.addEventListener('click', () => {
+    // 1. 按鈕淡出 + 放大 (1 秒)
+    rainbowBtn.classList.add('fade-out');
+    
+    // 2. 海豹開始旋轉 (3 秒, 1→2倍) 並抖動
+    sealShake.classList.add('shaking');
+    sealInner.classList.add('spin-and-grow');
+
+    // 3. 3秒後停止抖動
+    setTimeout(() => {
+      sealShake.classList.remove('shaking');
+    }, 3000);
+
+    // 4. 第4秒：海豹瞬間放大到 5 倍，播放屁聲 + 噴出 💩 (拋物線)
+    setTimeout(() => {
+      // (a) 放大到 5 倍
+      sealInner.style.transform = 'scale(5)';
+
+      // (b) 播放放屁音效
+      fartSound.play().catch(err => {
+        console.warn("音效無法自動播放：", err);
+      });
+
+      // (c) 產生 💩 emoji
+      const poop = document.createElement('div');
+      poop.classList.add('poop-emoji');
+      poop.textContent = '💩';
+
+      // 加到 seal-outer 內，讓它相對海豹做絕對定位
+      document.querySelector('.seal-outer').appendChild(poop);
+
+      // (d) 等 poop 動畫結束後：移除 poop，並「重置」海豹和按鈕到初始狀態
+      poop.addEventListener('animationend', () => {
+        // 1. 移除 💩
+        poop.remove();
+
+        // 2. 移除 按鈕淡出 class，並重置動畫造成的樣式
+        rainbowBtn.classList.remove('fade-out');
+        rainbowBtn.style.animation = 'none';
+        rainbowBtn.style.opacity   = '1';
+        rainbowBtn.style.transform = 'none';
+
+        // 讓瀏覽器強制 reflow (可選) 以確保狀態重置
+        // rainbowBtn.offsetWidth; // 若需要可開啟
+
+        // 3. 移除海豹的動畫 class、重置 transform
+        sealInner.classList.remove('spin-and-grow');
+        sealInner.style.transform = '';
+      });
+    }, 4000);
+  });
+</script>
+
+</body>
+</html>
