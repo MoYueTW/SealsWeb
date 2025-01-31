@@ -31,7 +31,7 @@ window.addEventListener('DOMContentLoaded', () => {
   marqueeContent.id = 'marqueeContent';
   
   // 文字末尾加空白，以便最後字+空白都出螢幕才重新出現
-  marqueeContent.textContent = '海豹小夥伴: ShuZhi,  ChenRay,  YuXiang,  HongYi,  4J,  DaP,  MoYue,  Ace,  Gimi_Hsu,  a0406, Otisuki '; 
+  marqueeContent.textContent = '海豹小夥伴: ShuZhi,  ChenRay,  YuXiang,  HongYi,  4J,  DaP,  MoYue,  Ace,  Gimi_Hsu,  a0406, 海外分部: Otisuki '; 
   // 加到 container => 加到 body
   marqueeContainer.appendChild(marqueeContent);
   document.body.appendChild(marqueeContainer);
