@@ -1,4 +1,8 @@
-/* 全域設定 */
+/* ---------------------------
+   (1) 海豹網站原CSS
+---------------------------- */
+
+/* 全域 */
 html, body {
   margin: 0;
   padding: 0;
@@ -6,16 +10,14 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column; /* 讓 footer 及 marquee 固定在底部 */
+  flex-direction: column;
   background-color: #fafafa;
 }
-
-/* 不可選取 */
 .no-select {
   user-select: none;
 }
 
-/* 外層容器 */
+/* 海豹外層 */
 .wrapper {
   position: relative;
   width: 250px;
@@ -26,7 +28,7 @@ html, body {
   flex-direction: column;
 }
 
-/* 彩虹按鈕 - 外框 */
+/* 彩虹按鈕 */
 .rainbow-button {
   position: relative;
   width: 100%;
@@ -36,33 +38,20 @@ html, body {
   border-radius: 9999px;
   cursor: default;
   outline: none;
-  z-index: 0; /* 在最底層 */
-  pointer-events: none; /* 不攔截滑鼠事件 */
+  z-index: 0;
+  pointer-events: none;
 }
-
-/* 
-   連續變化的彩虹漸層
-   用 ::before 做彩虹邊框 + ::after 做外圍 glow
-*/
 .rainbow-button::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   border-radius: inherit;
   padding: 3px;
-  background: linear-gradient(
-    270deg,
-    #ff0000,
-    #ff7f00,
-    #ffff00,
-    #00ff00,
-    #0000ff,
-    #4b0082,
-    #8f00ff,
-    #ff0000
+  background: linear-gradient(270deg,
+    #ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff,#ff0000
   );
   background-size: 1600% 1600%;
-  animation: rainbowBG 8s ease infinite;
+  animation: rainbowBG 18s ease infinite;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;
@@ -70,49 +59,39 @@ html, body {
 .rainbow-button::after {
   content: "";
   position: absolute;
-  top: -10px; left: -10px; right: -10px; bottom: -10px;
+  top:-10px; left:-10px; right:-10px; bottom:-10px;
   border-radius: inherit;
   z-index: -1;
-  background: linear-gradient(
-    270deg,
-    #ff0000,
-    #ff7f00,
-    #ffff00,
-    #00ff00,
-    #0000ff,
-    #4b0082,
-    #8f00ff,
-    #ff0000
+  background: linear-gradient(270deg,
+    #ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff,#ff0000
   );
   background-size: 1600% 1600%;
-  animation: rainbowBG 8s ease infinite;
-  filter: blur(10px); /* 模糊製造外圈光暈 */
+  animation: rainbowBG 18s ease infinite;
+  filter: blur(10px);
 }
 @keyframes rainbowBG {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0%   { background-position:0% 50%; }
+  50%  { background-position:100%50%; }
+  100% { background-position:0% 50%; }
 }
 
-/* 海豹外層 - 放大 + z-index:2 */
+/* 海豹 */
 .seal-outer {
   position: absolute;
-  top: 35%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(3);
-  z-index: 2;
+  top:35%;
+  left:50%;
+  transform: translate(-50%,-50%) scale(3);
+  z-index:2;
 }
-
-/* 海豹 Emoji 本身加陰影 */
 .seal-inner {
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+  text-shadow:2px 2px 4px rgba(0,0,0,0.4);
 }
 
-/* 海豹抖動動畫 */
+/* 抖動 */
 @keyframes shake {
-  0%, 100% { transform: translate(0, 0); }
-  10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 0); }
-  20%, 40%, 60%, 80% { transform: translate(5px, 0); }
+ 0%,100%{transform:translate(0,0);}
+ 10%,30%,50%,70%,90%{transform:translate(-5px,0);}
+ 20%,40%,60%,80%{transform:translate(5px,0);}
 }
 .shaking {
   animation: shake 0.1s infinite;
@@ -120,115 +99,286 @@ html, body {
 
 /* 旋轉+放大 */
 @keyframes spinAndGrow {
-  0%   { transform: scale(3) rotate(0deg); }
-  100% { transform: scale(5) rotate(360deg); }
+ 0%{transform:scale(3)rotate(0deg);}
+ 100%{transform:scale(5)rotate(360deg);}
 }
 .spin-and-grow {
   animation: spinAndGrow 3s forwards;
 }
 
-/* 💩 拋物線動畫 */
+/* 💩 */
 .poop-emoji {
-  position: absolute;
-  font-size: 30px;
-  left: 40px;
-  top: 10px;
+  position:absolute;
+  font-size:30px;
+  left:40px;
+  top:10px;
   animation: poopFly 1.5s forwards;
 }
 @keyframes poopFly {
-  0%   { transform: translate(0, 0)     scale(1);   opacity: 1; }
-  50%  { transform: translate(75px, -40px) scale(1.2);           }
-  100% { transform: translate(150px, 50px) scale(0.8); opacity: 0; }
+ 0%{transform:translate(0,0)scale(1);opacity:1;}
+ 50%{transform:translate(75px,-40px)scale(1.2);}
+ 100%{transform:translate(150px,50px)scale(0.8);opacity:0;}
 }
 
-/* 固定寬度，避免換字時大小跳動 */
+/* 提示文字 */
 .hint-text {
-  min-width: 250px; /* 依實際字長調整 */
-  display: inline-block;
-  margin-top: 10px;
-  font-size: 14px;
-  color: #777;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.1);
-  padding: 5px 10px;
-  border-radius: 5px;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-  position: relative; /* 讓裡面絕對定位的元素(汗水)能對齊 */
+  min-width:250px;
+  display:inline-block;
+  margin-top:10px;
+  font-size:14px;
+  color:#777;
+  text-align:center;
+  background:rgba(0,0,0,0.1);
+  padding:5px 10px;
+  border-radius:5px;
+  box-shadow:2px2px5px rgba(0,0,0,0.2);
+  position:relative;
 }
 
-/* 一次抖動 (0.3s) */
+/* hover 抖動(單次) */
 @keyframes hintShakeOnce {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-5px); }
-  40%, 80% { transform: translateX(5px); }
+ 0%,100%{transform:translateX(0);}
+ 20%,60%{transform:translateX(-5px);}
+ 40%,80%{transform:translateX(5px);}
 }
 .shake-once {
   animation: hintShakeOnce 0.3s;
 }
 
-/* 持續抖動 (0.3s反覆) */
+/* hover 抖動(持續) */
 @keyframes hintShakeForever {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-5px); }
-  40%, 80% { transform: translateX(5px); }
+ 0%,100%{transform:translateX(0);}
+ 20%,60%{transform:translateX(-5px);}
+ 40%,80%{transform:translateX(5px);}
 }
 .shake-forever {
   animation: hintShakeForever 0.3s infinite;
 }
 
-/* 汗水飛行 */
+/* 汗水 */
 .sweat-emoji {
-  position: absolute;
-  right: 0; 
-  top: 0;
-  font-size: 1.2em;
+  position:absolute;
+  right:0; 
+  top:0;
+  font-size:1.2em;
   animation: sweatFly 1s forwards;
 }
 @keyframes sweatFly {
-  0%   { transform: translate(0,0) scale(1);   opacity: 1; }
-  100% { transform: translate(30px,-30px) scale(0.5); opacity: 0; }
+ 0%{transform:translate(0,0)scale(1);opacity:1;}
+ 100%{transform:translate(30px,-30px)scale(0.5);opacity:0;}
 }
 
-/* 點擊後讓按鈕淡出的 class */
+/* 按鈕淡出 */
 .fade-out {
   animation: fadeOut 1s forwards;
 }
 @keyframes fadeOut {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
+ 0%{opacity:1;}
+ 100%{opacity:0;}
 }
 
-/* 底部標示（右下角） */
+/* Footer & 跑馬燈 */
 .footer-text {
-  position: absolute;
-  bottom: 40px; /* 留點空間給跑馬燈 */
-  right: 10px;
-  font-size: 12px;
-  color: #777;
-  text-align: right;
-  background: rgba(0, 0, 0, 0.1);
-  padding: 5px 10px;
-  border-radius: 5px;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  position:absolute;
+  bottom:40px;
+  right:10px;
+  font-size:12px;
+  color:#777;
+  text-align:right;
+  background:rgba(0,0,0,0.1);
+  padding:5px 10px;
+  border-radius:5px;
+  box-shadow:2px 2px5px rgba(0,0,0,0.2);
 }
-
-/* 跑馬燈容器：固定於底部 */
 .marquee-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: #666; /* 灰色 */
-  color: #fff;      /* 白字 */
-  overflow: hidden;
-  white-space: nowrap;
-  font-size: 14px;
-  padding: 5px 0; /* 上下內距 */
-  box-sizing: border-box;
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#666;
+  color:#fff;
+  overflow:hidden;
+  white-space:nowrap;
+  font-size:14px;
+  padding:5px0;
+  box-sizing:border-box;
+}
+.marquee {
+  display:inline-block;
+  will-change:transform;
 }
 
-/* 跑馬燈內容 (單條字串) */
-.marquee {
-  display: inline-block;
-  will-change: transform;
+/* -------------------------------------
+   (2) 音樂播放器 
+   固定左下角 + 毛玻璃
+-------------------------------------- */
+
+/* 播放器外層 */
+.music-player {
+  position:fixed;
+  bottom:50px;
+  left:10px;
+  width:700px;   /* 可調 */
+  height:280px;  /* 可調 */
+  margin:0;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 0 8px rgba(0,0,0,0.2);
+  opacity: 0;
+  
 }
+.music-player::before {
+  filter:blur(8px) brightness(0.8);
+}
+.player-content {
+  backdrop-filter:blur(10px);
+  display:flex;
+  flex-direction:row;
+  width:100%;
+  height:100%;
+  background:rgba(255,255,255,0.1);
+  font-size:0.85rem; /* 整體字體略縮 */
+}
+/* 封面: 加大陰影 */
+.cover-area {
+  width:220px; /* 可調 */
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,0.2);
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.5); /* 封面陰影加強 */
+}
+.cover-area img {
+  width:80%;
+  max-height:80%;
+  object-fit:cover;
+  border-radius:8px;
+  box-shadow:0 0 8px rgba(0,0,0,0.5); /* 圖片本身也加陰影 */
+}
+
+/* 右半部 */
+.info-area {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+  color:#fff;
+  overflow:hidden;
+}
+
+/* 標題 */
+.track-title {
+  font-size:1.3rem;
+  margin-bottom:5px;
+  font-weight:bold;
+}
+
+/* 歌詞框: 全部顯示,自由捲動 */
+.lyrics-box {
+  flex:1;
+  overflow-y:auto;
+  margin-bottom:5px;
+  font-size:1rem;
+  line-height:1.4;
+}
+
+/* 控制列 */
+.controls {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:auto;
+}
+
+/* 播放鍵(白色) + hover陰影 */
+.play-pause-btn {
+  width:36px;
+  height:36px;
+  font-size:16px;
+  color:#fff; /* 文字顏色白 */
+  background:rgba(255,255,255,0.2);
+  border:none;
+  border-radius:50%;
+  cursor:pointer;
+  box-shadow:0 0 4px rgba(0,0,0,0.3);
+}
+.play-pause-btn:hover {
+  background:rgba(255,255,255,0.3);
+}
+/* 進度條 */
+#progressBar {
+  flex:1;
+  height:6px;
+  -webkit-appearance:none;
+  background:#ccc;
+  border-radius:3px;
+  outline:none;
+  cursor:pointer;
+}
+#progressBar::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:16px;
+  height:16px;
+  background:#fff;
+  border-radius:50%;
+  box-shadow:0 0 2px rgba(0,0,0,0.3);
+  cursor:pointer;
+}
+.current-time,.total-time {
+  font-size:0.9rem;
+  min-width:45px;
+  text-align:center;
+}
+
+/* -----------------------
+   歌詞狀態:
+   .past-line     => 已唱過(黃色)
+   .active-line   => 目前(亮藍)
+   .upcoming-line => 未來(白色)
+----------------------- */
+
+/* 預設 use upcoming-line => 白色 + 陰影 */
+.lyrics-line {
+  color:#fff;
+  text-shadow: 1px1px2px rgba(0,0,0,0.6);
+  margin:5px0;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+
+/* 已唱過 => 粉色 + 光暈 */
+.past-line {
+  color:#f8f8f8;
+  text-shadow:0 0 5px #e8a7a1  ;
+  font-weight:bold;
+  opacity:0.8;
+}
+
+/* 目前 => 粉色 + 光暈 */
+.active-line {
+  color:#f8f8f8;
+  text-shadow:0 0 5px #e8a7a1  ;
+  font-weight:bold;
+  opacity:1;
+}
+
+/* 未來 => 白色 + 細陰影 */
+.upcoming-line {
+  color:#fff;
+  text-shadow:0 0 2px rgba(0,0,0,0.8);
+  opacity:0.7;
+}
+
+.cover-area img {
+  transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
+}
+.cover-area img:hover:not(.clicked) { /* 只有在沒有被點擊時，才會觸發 */
+  transform: scale(1.15);
+  box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.3);
+}
+.cover-area img {
+  user-select: none;  /* 禁止選取 */
+  pointer-events: auto; /* 確保仍可點擊 */
+  -webkit-user-drag: none; /* 禁止拖曳 (針對 Webkit) */
+}
+
