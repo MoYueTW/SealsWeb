@@ -1,0 +1,234 @@
+/* 全域設定 */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column; /* 讓 footer 及 marquee 固定在底部 */
+  background-color: #fafafa;
+}
+
+/* 不可選取 */
+.no-select {
+  user-select: none;
+}
+
+/* 外層容器 */
+.wrapper {
+  position: relative;
+  width: 250px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+/* 彩虹按鈕 - 外框 */
+.rainbow-button {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  border: none;
+  background: transparent;
+  border-radius: 9999px;
+  cursor: default;
+  outline: none;
+  z-index: 0; /* 在最底層 */
+  pointer-events: none; /* 不攔截滑鼠事件 */
+}
+
+/* 
+   連續變化的彩虹漸層
+   用 ::before 做彩虹邊框 + ::after 做外圍 glow
+*/
+.rainbow-button::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  padding: 3px;
+  background: linear-gradient(
+    270deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #0000ff,
+    #4b0082,
+    #8f00ff,
+    #ff0000
+  );
+  background-size: 1600% 1600%;
+  animation: rainbowBG 8s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+.rainbow-button::after {
+  content: "";
+  position: absolute;
+  top: -10px; left: -10px; right: -10px; bottom: -10px;
+  border-radius: inherit;
+  z-index: -1;
+  background: linear-gradient(
+    270deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #0000ff,
+    #4b0082,
+    #8f00ff,
+    #ff0000
+  );
+  background-size: 1600% 1600%;
+  animation: rainbowBG 8s ease infinite;
+  filter: blur(10px); /* 模糊製造外圈光暈 */
+}
+@keyframes rainbowBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 海豹外層 - 放大 + z-index:2 */
+.seal-outer {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(3);
+  z-index: 2;
+}
+
+/* 海豹 Emoji 本身加陰影 */
+.seal-inner {
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+}
+
+/* 海豹抖動動畫 */
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 0); }
+  20%, 40%, 60%, 80% { transform: translate(5px, 0); }
+}
+.shaking {
+  animation: shake 0.1s infinite;
+}
+
+/* 旋轉+放大 */
+@keyframes spinAndGrow {
+  0%   { transform: scale(3) rotate(0deg); }
+  100% { transform: scale(5) rotate(360deg); }
+}
+.spin-and-grow {
+  animation: spinAndGrow 3s forwards;
+}
+
+/* 💩 拋物線動畫 */
+.poop-emoji {
+  position: absolute;
+  font-size: 30px;
+  left: 40px;
+  top: 10px;
+  animation: poopFly 1.5s forwards;
+}
+@keyframes poopFly {
+  0%   { transform: translate(0, 0)     scale(1);   opacity: 1; }
+  50%  { transform: translate(75px, -40px) scale(1.2);           }
+  100% { transform: translate(150px, 50px) scale(0.8); opacity: 0; }
+}
+
+/* 固定寬度，避免換字時大小跳動 */
+.hint-text {
+  min-width: 250px; /* 依實際字長調整 */
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #777;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  position: relative; /* 讓裡面絕對定位的元素(汗水)能對齊 */
+}
+
+/* 一次抖動 (0.3s) */
+@keyframes hintShakeOnce {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+.shake-once {
+  animation: hintShakeOnce 0.3s;
+}
+
+/* 持續抖動 (0.3s反覆) */
+@keyframes hintShakeForever {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+.shake-forever {
+  animation: hintShakeForever 0.3s infinite;
+}
+
+/* 汗水飛行 */
+.sweat-emoji {
+  position: absolute;
+  right: 0; 
+  top: 0;
+  font-size: 1.2em;
+  animation: sweatFly 1s forwards;
+}
+@keyframes sweatFly {
+  0%   { transform: translate(0,0) scale(1);   opacity: 1; }
+  100% { transform: translate(30px,-30px) scale(0.5); opacity: 0; }
+}
+
+/* 點擊後讓按鈕淡出的 class */
+.fade-out {
+  animation: fadeOut 1s forwards;
+}
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 底部標示（右下角） */
+.footer-text {
+  position: absolute;
+  bottom: 40px; /* 留點空間給跑馬燈 */
+  right: 10px;
+  font-size: 12px;
+  color: #777;
+  text-align: right;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* 跑馬燈容器：固定於底部 */
+.marquee-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #666; /* 灰色 */
+  color: #fff;      /* 白字 */
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 14px;
+  padding: 5px 0; /* 上下內距 */
+  box-sizing: border-box;
+}
+
+/* 跑馬燈內容 (單條字串) */
+.marquee {
+  display: inline-block;
+  will-change: transform;
+}
