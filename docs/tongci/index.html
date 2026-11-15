@@ -74,6 +74,18 @@ details.rules ol{padding-left:20px;margin:8px 0}
 .wc .who{font-size:12px;color:var(--mut)}
 .wc .w{font-size:22px;font-weight:800;word-break:break-all}
 .wc.m{color:#fff;border-color:transparent}.wc.m .who{color:rgba(255,255,255,.85)}
+.glist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.wc.gw .who{margin-top:2px;line-height:1.45}
+.wc.mine{outline:2.5px solid var(--ink);outline-offset:-2px}
+.cnt{font-size:15px;font-weight:700;opacity:.75}
+.players.compact{display:flex;flex-wrap:wrap;gap:6px}
+.players.compact li{border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 3px;gap:6px;font-size:14px;background:#fff}
+.players.compact li:last-child{border-bottom:1px solid var(--line)}
+.players.compact li.done{border-color:var(--ok);color:var(--ok);font-weight:700}
+.players.compact li.spec{opacity:.55}
+.players.compact li.pend{border-color:var(--b);color:var(--b);font-weight:700}
+.players.compact li.pick{cursor:pointer;opacity:1;border-style:dashed}
+.players.compact .av{width:22px;height:22px;font-size:11px}
 .wc .w.none{font-size:15px;color:var(--mut);font-weight:600}
 @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
 .win{text-align:center;padding:8px 0 4px}
@@ -116,8 +128,10 @@ const S = {
   peers: [], j: null, isHost: false, hg: null, g: null,
   word: '', draft: '', subKey: null, wOut: null,
   hist: {}, seenAt: {}, ht: {}, err: '', stageKey: '', histKey: '',
-  cap: 4, secs: 60, connecting: false, created: false
+  cap: 8, secs: 60, wr: 'all', connecting: false, created: false
 };
+const MAXCAP = (window.claude && typeof window.claude.use === 'function') ? 10 : 100;
+const BIG = 12; // above this many players, show words grouped instead of one card per person
 const byJ = (a, b) => (a.j - b.j) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 const active = () => S.peers.filter(p => p.j).sort(byJ);
 
@@ -148,17 +162,28 @@ function loadScript(src) {
 
 async function mqttTransport(code) {
   if (!window.mqtt) await loadScript('https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js');
-  const base = 'tongci-v1/' + code + '/p/', mine = base + S.id;
+  // v2: small per-player presence on p/<id>; host game state on its own retained topic g, sent only when it changes
+  const base = 'tongci-v2/' + code + '/p/', gTopic = 'tongci-v2/' + code + '/g', mine = base + S.id;
   const c = window.mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
-    clientId: 'tc_' + S.id + '_' + rid(4), clean: true, keepalive: 20, reconnectPeriod: 2000, connectTimeout: 8000,
+    clientId: 'tc_' + S.id + '_' + rid(4), clean: true, keepalive: 30, reconnectPeriod: 2000, connectTimeout: 8000,
     will: { topic: mine, payload: '', retain: true, qos: 0 }
   });
-  const map = new Map(); let me = null, closed = false;
-  const emit = () => onPeers([...map.values()].map(v => Object.assign({}, v.p, { me: v.p.id === S.id })));
-  const pub = () => { if (c.connected && me) c.publish(mine, JSON.stringify(me), { retain: true, qos: 0 }); };
+  const map = new Map(); let me = null, gMsg = null, lastG = '', closed = false, pt = null, gt = null;
+  const emit = () => onPeers([...map.values()].map(v => {
+    const o = Object.assign({}, v.p, { me: v.p.id === S.id });
+    if (gMsg && gMsg.from === o.id) o.g = gMsg.g;
+    return o;
+  }));
+  const pubP = () => { if (c.connected && me) c.publish(mine, JSON.stringify(me), { retain: true, qos: 0 }); };
+  const pubG = () => { if (c.connected && lastG) c.publish(gTopic, lastG, { retain: true, qos: 0 }); };
   c.on('message', (topic, buf) => {
-    const id = topic.slice(base.length); if (id === S.id) return;
     const s = buf.toString();
+    if (topic === gTopic) {
+      if (!s) return;
+      try { const m = JSON.parse(s); if (m && m.from && m.g && m.from !== S.id) { gMsg = m; emit(); } } catch (e) {}
+      return;
+    }
+    const id = topic.slice(base.length); if (id === S.id) return;
     if (!s) { if (map.delete(id)) emit(); return; }
     try { const p = JSON.parse(s); if (p && p.id === id) { map.set(id, { p, seen: Date.now() }); emit(); } } catch (e) {}
   });
@@ -166,31 +191,46 @@ async function mqttTransport(code) {
   c.on('offline', () => { S.conn = false; renderTop(); });
   await new Promise((res, rej) => {
     const to = setTimeout(() => rej(new Error('timeout')), 10000);
-    c.on('connect', () => { S.conn = true; renderTop(); c.subscribe(base + '+', { qos: 0 }, () => { clearTimeout(to); pub(); res(); }); });
+    c.on('connect', () => { S.conn = true; renderTop(); c.subscribe([base + '+', gTopic], { qos: 0 }, () => { clearTimeout(to); pubP(); pubG(); res(); }); });
   });
   const hb = setInterval(() => {
-    pub(); const now = Date.now(); let ch = false;
-    for (const [id, v] of map) if (id !== S.id && now - v.seen > 16000) { map.delete(id); ch = true; }
+    pubP(); const now = Date.now(); let ch = false;
+    for (const [id, v] of map) if (id !== S.id && now - v.seen > 32000) { map.delete(id); ch = true; }
     if (ch) emit();
-  }, 5000);
+  }, 10000);
   const bye = () => { if (closed) return; closed = true; clearInterval(hb); try { c.publish(mine, '', { retain: true }); } catch (e) {} setTimeout(() => { try { c.end(true); } catch (e) {} }, 300); };
   window.addEventListener('pagehide', bye);
-  let pt = null;
   return {
-    set(o) { me = Object.assign({}, o, { hb: Date.now() }); map.set(S.id, { p: me, seen: Date.now() }); emit(); clearTimeout(pt); pt = setTimeout(pub, 40); },
+    set(o) {
+      const g = o.g; const p = Object.assign({}, o); delete p.g; p.hb = Date.now();
+      if (!me || JSON.stringify(Object.assign({}, me, { hb: 0 })) !== JSON.stringify(Object.assign({}, p, { hb: 0 }))) { clearTimeout(pt); pt = setTimeout(pubP, 40); }
+      me = p; map.set(S.id, { p, seen: Date.now() });
+      if (g) {
+        const str = JSON.stringify({ from: S.id, g });
+        if (str !== lastG) { lastG = str; gMsg = { from: S.id, g }; clearTimeout(gt); gt = setTimeout(pubG, 200); }
+      } else lastG = '';
+      emit();
+    },
     leave: bye
   };
 }
 
-// local test transport (same browser, several tabs): add ?local to the URL
-async function bcTransport(code) {
-  const ch = new BroadcastChannel('tongci-' + code); const map = new Map(); let me = null;
-  const emit = () => onPeers([...map.values()].map(v => Object.assign({}, v.p, { me: v.p.id === S.id })));
-  ch.onmessage = e => { const m = e.data; if (!m || m.id === S.id) return; if (m.bye) { map.delete(m.id); emit(); return; } if (m.p) { const isNew = !map.has(m.id); map.set(m.id, { p: m.p, seen: Date.now() }); emit(); if (isNew && me) ch.postMessage({ id: S.id, p: me }); } if (m.hello && me) ch.postMessage({ id: S.id, p: me }); };
-  ch.postMessage({ id: S.id, hello: 1 });
-  const hb = setInterval(() => { if (me) ch.postMessage({ id: S.id, p: me }); const now = Date.now(); for (const [id, v] of map) if (id !== S.id && now - v.seen > 8000) map.delete(id); }, 2000);
-  S.conn = true;
-  return { set(o) { me = o; map.set(S.id, { p: o, seen: Date.now() }); emit(); ch.postMessage({ id: S.id, p: o }); }, leave() { clearInterval(hb); ch.postMessage({ id: S.id, bye: 1 }); ch.close(); } };
+// local test mode (?local): an in-browser stand-in for the MQTT broker over BroadcastChannel, so several tabs can play offline
+function fakeMqtt() {
+  const match = (f, t) => { const a = f.split('/'), b = t.split('/'); return a.length === b.length && a.every((x, i) => x === '+' || x === b[i]); };
+  return { connect() {
+    const ch = new BroadcastChannel('tongci-fake-broker'), hs = {}, subs = [], own = new Map(); // each tab re-serves only its own retained topics
+    const fire = (ev, ...a) => (hs[ev] || []).forEach(f => f(...a));
+    const deliver = m => { if (subs.some(f => match(f, m.topic))) fire('message', m.topic, m.payload); };
+    ch.onmessage = e => { const m = e.data; if (m.t === 'pub') deliver(m); else if (m.t === 'getret') own.forEach((v, k) => ch.postMessage({ t: 'pub', topic: k, payload: v, retain: true })); };
+    const cli = { connected: false,
+      on(ev, f) { (hs[ev] = hs[ev] || []).push(f); return cli; },
+      subscribe(t, o, cb) { subs.push(...[].concat(t)); ch.postMessage({ t: 'getret' }); if (cb) cb(); },
+      publish(topic, payload, o) { const m = { t: 'pub', topic, payload: String(payload), retain: !!(o && o.retain) }; if (m.retain) { if (m.payload) own.set(topic, m.payload); else own.delete(topic); } ch.postMessage(m); deliver(m); },
+      end() { ch.close(); } };
+    setTimeout(() => { cli.connected = true; fire('connect'); }, 30);
+    return cli;
+  } };
 }
 
 /* ---------- presence push (coalesced) ---------- */
@@ -204,12 +244,13 @@ function pushMe() {
 }
 
 /* ---------- game state (host-authoritative, lives in host presence) ---------- */
-function newG(cap, secs) { return { v: 1, cap, secs, ph: 'lobby', seats: [], nm: {}, gid: 0, r: 0, k: '', hist: [] }; }
+function newG(cap, secs, wr) { return { v: 2, cap, secs, wr: wr || 'all', ph: 'lobby', seats: [], pend: [], nm: {}, gid: 0, r: 0, k: '', hist: [] }; }
 
 function fitG(g) {
-  const keep = new Set(g.seats); g.hist.forEach(h => Object.keys(h.w).forEach(id => keep.add(id)));
+  if (g.hist.length > 2) g.hist = g.hist.slice(-2); // players keep the full history locally; the wire only carries the last rounds
+  const keep = new Set(g.seats.concat(g.pend || [])); g.hist.forEach(h => Object.keys(h.w).forEach(id => keep.add(id)));
   Object.keys(g.nm).forEach(id => { if (!keep.has(id)) delete g.nm[id]; });
-  while (bytes(g) > (S.mode === 'room' ? 3100 : 60000) && g.hist.length > 1) {
+  while (S.mode === 'room' && bytes(g) > 3100 && g.hist.length > 1) {
     g.hist.shift();
     const k2 = new Set(g.seats); g.hist.forEach(h => Object.keys(h.w).forEach(id => k2.add(id)));
     Object.keys(g.nm).forEach(id => { if (!k2.has(id)) delete g.nm[id]; });
@@ -228,7 +269,10 @@ function hostTick() {
     if (seats.length !== g.seats.length) { g.seats = seats; ch = true; }
     if (g.seats.length < 2) { g.ph = 'lobby'; g.seats = ids.slice(0, g.cap); ch = true; }
   }
-  for (const id of g.seats) { const n = by[id] && by[id].n; if (n && g.nm[id] !== n) { g.nm[id] = n; ch = true; } }
+  g.pend = g.pend || [];
+  const pend = g.pend.filter(id => by[id] && !g.seats.includes(id));
+  if (pend.length !== g.pend.length) { g.pend = pend; ch = true; }
+  for (const id of g.seats.concat(g.pend)) { const n = by[id] && by[id].n; if (n && g.nm[id] !== n) { g.nm[id] = n; ch = true; } }
   if (g.ph === 'in') {
     if (t.k !== g.k) { t.k = g.k; t.dl = g.secs ? now + g.secs * 1000 + 900 : 0; }
     const all = g.seats.every(id => by[id] && by[id].d === g.k);
@@ -238,11 +282,12 @@ function hostTick() {
     const subs = g.seats.filter(id => by[id] && by[id].d === g.k);
     const allW = subs.every(id => by[id].w && by[id].w.k === g.k);
     const waitDrafts = now - t.rv > 1500; // give auto-submitted drafts a moment
-    if ((allW && waitDrafts) || now - t.rv > 4000) {
+    if ((allW && waitDrafts) || now - t.rv > (g.seats.length > 30 ? 6000 : 4000)) {
       const w = {};
       for (const id of g.seats) { const p = by[id]; w[id] = (p && p.w && p.w.k === g.k) ? String(p.w.t || '').slice(0, 16) : ''; }
-      const vals = g.seats.map(id => norm(w[id]));
-      const win = g.seats.length >= 2 && vals[0] !== '' && vals.every(v => v === vals[0]);
+      const cnt = {}; g.seats.forEach(id => { const v = norm(w[id]); if (v) cnt[v] = (cnt[v] || 0) + 1; });
+      const top = Math.max(0, ...Object.values(cnt)), n = g.seats.length;
+      const win = n >= 2 && (g.wr === 'maj' ? top * 2 > n : top === n);
       g.hist.push({ g: g.gid, r: g.r, w, win: win ? 1 : 0 });
       g.ph = win ? 'win' : 'res'; t.res = now; ch = true;
     }
@@ -252,25 +297,34 @@ function hostTick() {
   }
   if (ch) { fitG(g); pushMe(); render(); }
 }
-function nextRound() { const g = S.hg; if (!g) return; g.r++; g.k = g.gid + '.' + g.r; g.ph = 'in'; S.ht = {}; fitG(g); pushMe(); render(); }
+function nextRound() {
+  const g = S.hg; if (!g) return;
+  const here = new Set(active().map(p => p.id));
+  const add = (g.pend || []).filter(id => here.has(id) && !g.seats.includes(id));
+  if (add.length) { g.seats = g.seats.concat(add); g.cap = Math.min(MAXCAP, Math.max(g.cap, g.seats.length)); }
+  g.pend = [];
+  g.r++; g.k = g.gid + '.' + g.r; g.ph = 'in'; S.ht = {}; fitG(g); pushMe(); render(); }
 function startGame() {
   const g = S.hg; if (!g) return;
   const ids = active().map(p => p.id);
   g.seats = ids.slice(0, g.cap);
+  const extra = (g.pend || []).filter(id => ids.includes(id) && !g.seats.includes(id));
+  if (extra.length) { g.seats = g.seats.concat(extra); g.cap = Math.min(MAXCAP, Math.max(g.cap, g.seats.length)); }
   if (g.seats.length < 2) { toast('至少要 2 人才能開始'); return; }
-  g.gid = (g.gid || 0) + 1; g.r = 1; g.k = g.gid + '.1'; g.hist = []; g.ph = 'in'; S.ht = {};
+  g.gid = (g.gid || 0) + 1; g.r = 1; g.k = g.gid + '.1'; g.hist = []; g.pend = []; g.ph = 'in'; S.ht = {};
   fitG(g); pushMe(); render();
 }
-function toLobby() { const g = S.hg; if (!g) return; g.ph = 'lobby'; g.hist = []; S.ht = {}; fitG(g); pushMe(); render(); }
+function toLobby() { const g = S.hg; if (!g) return; g.ph = 'lobby'; g.hist = []; g.pend = []; S.ht = {}; fitG(g); pushMe(); render(); }
 
 /* ---------- sync on every peers change ---------- */
-function onPeers(list) { S.peers = list; sync(); render(); }
+let syncT = null;
+function onPeers(list) { S.peers = list; if (syncT) return; syncT = setTimeout(() => { syncT = null; sync(); render(); }, 60); }
 function sync() {
   if (!S.tr) return;
   const act = active(), host = act[0];
   if (host) {
     if (host.id === S.id) {
-      if (!S.isHost) { S.isHost = true; S.hg = S.g ? JSON.parse(JSON.stringify(S.g)) : newG(S.cap, S.secs); S.ht = {}; pushMe(); }
+      if (!S.isHost) { S.isHost = true; S.hg = S.g ? JSON.parse(JSON.stringify(S.g)) : newG(S.cap, S.secs, S.wr); S.ht = {}; pushMe(); }
     } else if (S.isHost && host.j < S.j) { S.isHost = false; pushMe(); }
   }
   const hp = act.find(p => p.g && p.id === (host && host.id)) || act.find(p => p.g);
@@ -307,7 +361,7 @@ async function enter(code, create) {
   S.err = ''; S.connecting = true; render();
   let tr;
   try {
-    if (/[?&]local\b/.test(location.search)) { tr = await bcTransport(code); S.mode = 'local'; }
+    if (/[?&]local\b/.test(location.search)) { window.mqtt = window.mqtt || fakeMqtt(); S.code = code; tr = await mqttTransport(code); S.mode = 'mqtt'; }
     else if (window.claude && typeof window.claude.use === 'function') {
       const api = await Promise.race([window.claude.use('room'), sleep(10000).then(() => null)]);
       if (!api) throw new Error('room');
@@ -320,7 +374,7 @@ async function enter(code, create) {
   }
   Object.assign(S, { code, tr, view: 'room', connecting: false, peers: [], g: null, hg: null, isHost: false, hist: {}, seenAt: {}, ht: {}, subKey: null, wOut: null, word: '', draft: '', stageKey: '', histKey: '', created: create });
   try { history.replaceState(null, '', '#r-' + code); } catch (e) {}
-  if (create) { S.j = Date.now(); S.isHost = true; S.hg = newG(S.cap, S.secs); S.g = S.hg; pushMe(); }
+  if (create) { S.j = Date.now(); S.isHost = true; S.hg = newG(S.cap, S.secs, S.wr); S.g = S.hg; pushMe(); }
   else { S.j = null; pushMe(); setTimeout(assignJ, 1600); }
   render();
 }
@@ -344,7 +398,18 @@ function submitWord() {
   S.word = v; S.subKey = g.k; S.wOut = null; S.draft = ''; pushMe(); render();
 }
 function unsubmit() { const g = S.g; if (!g || g.ph !== 'in' || S.subKey !== g.k) return; S.draft = S.word; S.draftKey = g.k; S.subKey = null; pushMe(); render(); setTimeout(() => { const el = document.getElementById('word'); if (el) el.focus(); }, 0); }
-function setOpt(k, v) { if (S.isHost && S.hg && S.hg.ph === 'lobby') { S.hg[k] = v; if (k === 'cap') S.cap = v; else S.secs = v; fitG(S.hg); hostTick(); pushMe(); render(); } }
+function togglePend(id) {
+  const g = S.hg; if (!S.isHost || !g || g.ph === 'lobby' || g.seats.includes(id)) return;
+  g.pend = g.pend || [];
+  if (g.pend.includes(id)) g.pend = g.pend.filter(x => x !== id);
+  else {
+    if (g.seats.length + g.pend.length >= MAXCAP) { toast('已達 ' + MAXCAP + ' 人上限'); return; }
+    g.pend.push(id);
+    if (g.ph === 'win') toast('按「再玩一次」時他會一起入座');
+  }
+  fitG(g); pushMe(); render();
+}
+function setOpt(k, v) { if (S.isHost && S.hg && S.hg.ph === 'lobby') { S.hg[k] = v; S[k] = v; fitG(S.hg); hostTick(); pushMe(); render(); } }
 function copyCode() {
   const txt = S.mode === 'mqtt' ? location.origin + location.pathname + '#r-' + S.code : S.code;
   try { navigator.clipboard.writeText(txt).then(() => toast(S.mode === 'mqtt' ? '已複製邀請連結' : '已複製房間碼'), () => toast('房間碼：' + S.code)); } catch (e) { toast('房間碼：' + S.code); }
@@ -373,8 +438,8 @@ function renderHome() {
   <div class="card">
     <h2>建立房間</h2>
     <label>人數上限</label>
-    <div class="stepper"><button class="btn ghost" data-a="cap-">－</button><b id="capv">${S.cap}</b><button class="btn ghost" data-a="cap+">＋</button><span class="mut">人（2–30）</span></div>
-    <input type="range" class="rng" id="capr" min="2" max="30" value="${S.cap}">
+    <div class="stepper"><button class="btn ghost" data-a="cap-">－</button><b id="capv">${S.cap}</b><button class="btn ghost" data-a="cap+">＋</button><span class="mut">人（2–${MAXCAP}）</span></div>
+    <input type="range" class="rng" id="capr" min="2" max="${MAXCAP}" value="${S.cap}">
     <label>每輪思考時間</label>
     <div class="seg">${[[0,'不限'],[30,'30 秒'],[60,'60 秒'],[90,'90 秒']].map(([v,l]) => `<button data-a="secs" data-v="${v}" class="${S.secs===v?'on':''}">${l}</button>`).join('')}</div>
     <button class="btn primary block" data-a="create" ${S.connecting?'disabled':''}>${S.connecting?'連線中…':'建立房間'}</button>
@@ -409,8 +474,8 @@ function stageKeyOf() {
   const g = S.g;
   if (!g) return 'wait';
   const seated = g.seats.includes(S.id);
-  if (g.ph === 'lobby') return ['lobby', S.isHost, g.cap, g.secs, g.seats.length, seated].join('|');
-  if (g.ph === 'in') return ['in', g.k, S.subKey === g.k, seated, S.isHost].join('|');
+  if (g.ph === 'lobby') return ['lobby', S.isHost, g.cap, g.secs, g.wr, g.seats.length, seated, Math.max(0, active().length - g.cap)].join('|');
+  if (g.ph === 'in') return ['in', g.k, S.subKey === g.k, seated, S.isHost, (g.pend || []).includes(S.id)].join('|');
   if (g.ph === 'rv') return 'rv|' + g.k;
   return [g.ph, g.k, S.isHost, (g.hist || []).length].join('|');
 }
@@ -435,8 +500,27 @@ function renderRoom() {
   tickUI();
 }
 
+function groups(entry) { // same-word groups, biggest first; blank answers kept apart
+  const m = new Map(), empty = [];
+  for (const id of Object.keys(entry.w)) { const w = entry.w[id], k = norm(w); if (!k) { empty.push(id); continue; } if (!m.has(k)) m.set(k, { k, word: w, ids: [] }); m.get(k).ids.push(id); }
+  return { list: [...m.values()].sort((a, b) => b.ids.length - a.ids.length), empty };
+}
+const nmIn = (e, id) => id === S.id ? '你' : ((e.nm && e.nm[id]) || nameOf(id));
+function nameList(e, ids, max) { const ns = ids.map(id => nmIn(e, id)); return ns.slice(0, max).join('、') + (ns.length > max ? ` 等 ${ns.length} 人` : ''); }
+function groupCards(e, winKey, colors) {
+  const { list, empty } = groups(e);
+  return `<div class="glist">${list.map((gp, i) => {
+    const c = winKey ? (gp.k === winKey ? COLORS[0] : '') : colors[gp.k];
+    const mine = gp.ids.includes(S.id);
+    return `<div class="wc gw ${c ? 'm' : ''} ${mine ? 'mine' : ''}" style="animation-delay:${Math.min(i, 15) * 45}ms;${c ? 'background:' + c : ''}"><div class="w">${esc(gp.word)} <span class="cnt">×${gp.ids.length}</span></div><div class="who">${esc(nameList(e, gp.ids, 24))}</div></div>`;
+  }).join('')}${empty.length ? `<div class="wc gw"><div class="w none">沒寫 ×${empty.length}</div><div class="who">${esc(nameList(e, empty, 24))}</div></div>` : ''}</div>`;
+}
 function wordChips(entry, matchColors) {
   if (!entry) return '';
+  if (Object.keys(entry.w).length > BIG) {
+    const { list, empty } = groups(entry);
+    return `<div class="chips">${list.map(gp => { const c = matchColors && matchColors[gp.k]; return `<span class="chip ${c ? 'm' : ''}" ${c ? `style="background:${c}"` : ''}>${esc(gp.word)} <small style="${c ? 'color:rgba(255,255,255,.85)' : ''}">×${gp.ids.length}</small></span>`; }).join('')}${empty.length ? `<span class="chip"><span class="mut">沒寫 ×${empty.length}</span></span>` : ''}</div>`;
+  }
   return `<div class="chips">${Object.keys(entry.w).map(id => {
     const w = entry.w[id], c = matchColors && matchColors[norm(w)];
     return `<span class="chip ${c ? 'm' : ''}" ${c ? `style="background:${c}"` : ''}><small style="${c ? 'color:rgba(255,255,255,.85)' : ''}">${esc((entry.nm && entry.nm[id]) || nameOf(id))}</small>${w ? esc(w) : '<span class="mut">（沒寫）</span>'}</span>`;
@@ -456,12 +540,15 @@ function stageHTML() {
   if (g.ph === 'lobby') {
     const hostCtl = S.isHost ? `
       <label>人數上限</label>
-      <div class="stepper"><button class="btn ghost" data-a="hcap-">－</button><b>${g.cap}</b><button class="btn ghost" data-a="hcap+">＋</button><span class="mut">人（2–30）</span></div>
-      <input type="range" class="rng" id="hcapr" min="2" max="30" value="${g.cap}">
+      <div class="stepper"><button class="btn ghost" data-a="hcap-">－</button><b>${g.cap}</b><button class="btn ghost" data-a="hcap+">＋</button><span class="mut">人（2–${MAXCAP}）</span></div>
+      <input type="range" class="rng" id="hcapr" min="2" max="${MAXCAP}" value="${g.cap}">
       <label>每輪思考時間</label>
       <div class="seg">${[[0,'不限'],[30,'30 秒'],[60,'60 秒'],[90,'90 秒']].map(([v,l]) => `<button data-a="hsecs" data-v="${v}" class="${g.secs===v?'on':''}">${l}</button>`).join('')}</div>
+      <label>勝利條件</label>
+      <div class="seg">${[['all','全員寫一樣'],['maj','過半數寫一樣']].map(([v,l]) => `<button data-a="hwr" data-v="${v}" class="${(g.wr||'all')===v?'on':''}">${l}</button>`).join('')}</div>
+      ${active().length > g.cap ? `<p class="mut" style="margin-top:10px">有 ${active().length - g.cap} 人超過上限在觀戰，調高人數上限就能讓他們入座。</p>` : ''}
       <button class="btn accent block" data-a="start" ${g.seats.length < 2 ? 'disabled' : ''}>${g.seats.length < 2 ? '等待其他玩家加入…' : `開始遊戲（${g.seats.length} 人）`}</button>` :
-      `<p class="mut" style="margin-top:8px">人數上限 ${g.cap} 人・每輪 ${g.secs ? g.secs + ' 秒' : '不限時'}</p><p style="margin-top:10px;font-weight:700">${seated ? '等待房主開始遊戲…' : '房間已滿，你目前是觀戰，下一場有空位會自動入座'}</p>`;
+      `<p class="mut" style="margin-top:8px">人數上限 ${g.cap} 人・每輪 ${g.secs ? g.secs + ' 秒' : '不限時'}・${g.wr === 'maj' ? '過半數寫一樣就過關' : '全員寫一樣才過關'}</p><p style="margin-top:10px;font-weight:700">${seated ? '等待房主開始遊戲…' : '房間已滿，你目前是觀戰，下一場有空位會自動入座'}</p>`;
     return `<div class="card"><h2>大廳</h2><p class="mut">把房間碼 <b style="color:var(--ink)">${esc(S.code)}</b> 給朋友${S.mode === 'room' ? '（他們打開同一個頁面後輸入）' : '，或直接傳邀請連結'}。</p>${hostCtl}</div>`;
   }
   if (g.ph === 'in') {
@@ -469,7 +556,7 @@ function stageHTML() {
     const pc = prev ? groupColors(prev).colors : null;
     const sub = S.subKey === g.k;
     let body;
-    if (!seated) body = `<p class="mut">你在觀戰中，等下一場再加入。</p>`;
+    if (!seated) body = (g.pend || []).includes(S.id) ? `<div class="sent"><div><b style="font-size:17px">房主讓你下一輪加入！</b><div class="mut">先看看大家寫什麼，準備好</div></div></div>` : `<p class="mut">你在觀戰中。房主可以讓你從下一輪加入。</p>`;
     else if (sub) body = `<div class="sent"><div><div class="mut">你寫了</div><b>${esc(S.word)}</b></div><button class="btn small ghost" data-a="unsub">修改</button></div><p class="mut" style="margin-top:8px">等其他人送出…</p>`;
     else body = `<div class="row"><input type="text" id="word" maxlength="16" placeholder="${g.r === 1 ? '隨便想一個詞' : '想一個大家都會寫的詞'}" autocomplete="off" enterkeyhint="send"><button class="btn primary" data-a="submit">送出</button></div>`;
     return `<div class="card">
@@ -483,15 +570,15 @@ function stageHTML() {
   if (g.ph === 'rv') return `<div class="card center"><div class="round" style="justify-content:center"><h2>第 ${g.r} 輪・揭曉中…</h2></div><p class="mut" style="margin-top:6px">收集大家的詞</p></div>`;
   const e = entryFor(g.gid, g.r);
   if (!e) return `<div class="card center"><p class="mut">揭曉中…</p></div>`;
-  const gc = groupColors(e);
-  const cards = `<div class="grid">${Object.keys(e.w).map((id, i) => { const w = e.w[id], c = g.ph === 'win' ? COLORS[0] : gc.colors[norm(w)]; return `<div class="wc ${c ? 'm' : ''}" style="animation-delay:${i * 70}ms;${c ? 'background:' + c : ''}"><div class="who">${esc((e.nm && e.nm[id]) || nameOf(id))}${id === S.id ? '（你）' : ''}</div><div class="w ${w ? '' : 'none'}">${w ? esc(w) : '沒寫'}</div></div>`; }).join('')}</div>`;
+  const gc = groupColors(e), n = Object.keys(e.w).length, winKey = g.ph === 'win' ? gc.top : null;
+  const cards = n > BIG ? groupCards(e, winKey, gc.colors) : `<div class="grid">${Object.keys(e.w).map((id, i) => { const w = e.w[id], c = winKey ? (norm(w) === winKey ? COLORS[0] : '') : gc.colors[norm(w)]; return `<div class="wc ${c ? 'm' : ''}" style="animation-delay:${i * 70}ms;${c ? 'background:' + c : ''}"><div class="who">${esc((e.nm && e.nm[id]) || nameOf(id))}${id === S.id ? '（你）' : ''}</div><div class="w ${w ? '' : 'none'}">${w ? esc(w) : '沒寫'}</div></div>`; }).join('')}</div>`;
   if (g.ph === 'win') {
-    const word = Object.values(e.w)[0];
-    return `<div class="card"><div class="win"><div class="em">🎉</div><div class="mut">${Object.keys(e.w).length} 個人在第 ${g.r} 輪相遇了</div><div class="big">${esc(word)}</div></div>${cards}
+    const word = (groups(e).list[0] || {}).word || '';
+    return `<div class="card"><div class="win"><div class="em">🎉</div><div class="mut">${gc.max === n ? n + ' 個人' : gc.max + ' / ' + n + ' 人'}在第 ${g.r} 輪相遇了</div><div class="big">${esc(word)}</div></div>${cards}
       ${S.isHost ? `<button class="btn accent block" data-a="again">再玩一次</button><button class="btn ghost block" style="margin-top:8px" data-a="lobby">回大廳（改人數／時間）</button>` : `<p class="mut center" style="margin-top:12px">等房主開下一場…</p>`}</div>`;
   }
-  const n = Object.keys(e.w).length;
-  const summary = gc.max >= 2 ? `${gc.max} / ${n} 人想到同一個詞，差一點！` : '大家都寫得不一樣';
+  const need = g.wr === 'maj' ? Math.floor(n / 2) + 1 : n;
+  const summary = gc.max >= 2 ? `最多 ${gc.max} / ${n} 人想到同一個詞（要 ${need} 人才過關）` : '大家都寫得不一樣';
   return `<div class="card"><div class="round"><h2>第 ${g.r} 輪結果</h2></div><p class="prompt" style="margin-top:6px">${summary}</p>${cards}
     <div class="bar"><i id="nbar"></i></div><p class="mut" style="margin-top:8px">下一輪即將開始…</p>
     ${S.isHost ? `<button class="btn ghost block" data-a="next">直接下一輪</button>` : ''}</div>`;
@@ -510,11 +597,26 @@ function renderPlayers() {
   const hostId = act[0] && act[0].id;
   const seats = g ? g.seats : [];
   document.getElementById('ptitle').textContent = g ? `玩家 ${seats.length} / ${g.cap}` : '玩家';
+  const big = act.length + joining.length > BIG;
+  el.classList.toggle('compact', big);
+  if (big) {
+    el.innerHTML = act.map(p => {
+      const seated = seats.includes(p.id), done = g && g.ph === 'in' && p.d === g.k;
+      const pd = !seated && g && (g.pend || []).includes(p.id), canPick = !seated && S.isHost && g && g.ph !== 'lobby';
+      return `<li class="${seated ? '' : (pd ? 'pend' : 'spec')} ${done ? 'done' : ''} ${canPick ? 'pick' : ''}" ${canPick ? `data-a="pend" data-id="${esc(p.id)}"` : ''} title="${seated ? '' : (pd ? '下輪加入' : '觀戰')}"><span class="av" style="background:${colorOf(p.id)}">${esc((p.n || '?').slice(0, 1))}</span>${esc(p.n || '？')}${p.id === hostId ? ' ★' : ''}${p.id === S.id ? '（你）' : ''}${done ? ' ✓' : ''}${pd ? ' ↪下輪' : (canPick ? ' ＋' : '')}</li>`;
+    }).concat(joining.map(p => `<li class="spec">${esc(p.n || '？')}…</li>`)).join('');
+    return;
+  }
   const rows = act.map(p => {
     const seated = seats.includes(p.id);
     let st = '';
     if (!g) st = '';
-    else if (!seated) st = '<span class="st">觀戰</span>';
+    else if (!seated) {
+      const pd = (g.pend || []).includes(p.id);
+      st = (S.isHost && g.ph !== 'lobby') ? `<button class="btn small ${pd ? 'ghost' : 'primary'}" data-a="pend" data-id="${esc(p.id)}">${pd ? '取消' : '下輪加入'}</button>`
+         : `<span class="st">${pd ? '下輪加入' : '觀戰'}</span>`;
+      if (pd && S.isHost && g.ph !== 'lobby') st = '<span class="st ok" style="margin-right:6px">下輪加入</span>' + st;
+    }
     else if (g.ph === 'in') st = p.d === g.k ? '<span class="st ok">已送出 ✓</span>' : '<span class="st">思考中…</span>';
     else if (g.ph === 'lobby') st = '<span class="st ok">已入座</span>';
     return `<li><span class="av" style="background:${colorOf(p.id)}">${esc((p.n || '?').slice(0, 1))}</span><span class="nm">${esc(p.n || '？')}${p.id === hostId ? '<span class="tag h">房主</span>' : ''}${p.id === S.id ? '<span class="tag">你</span>' : ''}</span>${st}</li>`;
@@ -549,18 +651,20 @@ setInterval(() => { if (S.isHost) hostTick(); tickUI(); }, 250);
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-a]'); if (!b) return;
   const a = b.dataset.a;
-  if (a === 'cap-' || a === 'cap+') { const n = document.getElementById('name'); if (n) S.name = n.value; S.cap = Math.max(2, Math.min(30, S.cap + (a === 'cap+' ? 1 : -1))); render(); }
+  if (a === 'cap-' || a === 'cap+') { const n = document.getElementById('name'); if (n) S.name = n.value; S.cap = Math.max(2, Math.min(MAXCAP, S.cap + (a === 'cap+' ? 1 : -1))); render(); }
   else if (a === 'secs') { const n = document.getElementById('name'); if (n) S.name = n.value; S.secs = +b.dataset.v; render(); }
   else if (a === 'create') enter(rid(4), true);
   else if (a === 'join') { const c = (document.getElementById('code').value || '').trim().toLowerCase(); enter(c, false); }
   else if (a === 'clearhash') { e.preventDefault(); try { history.replaceState(null, '', location.pathname + location.search); } catch (x) {} render(); }
   else if (a === 'leave') leave();
   else if (a === 'copy') copyCode();
-  else if (a === 'hcap-' || a === 'hcap+') setOpt('cap', Math.max(2, Math.min(30, S.hg.cap + (a === 'hcap+' ? 1 : -1))));
+  else if (a === 'hcap-' || a === 'hcap+') setOpt('cap', Math.max(2, Math.min(MAXCAP, S.hg.cap + (a === 'hcap+' ? 1 : -1))));
   else if (a === 'hsecs') setOpt('secs', +b.dataset.v);
+  else if (a === 'hwr') setOpt('wr', b.dataset.v);
   else if (a === 'start' || a === 'again') startGame();
   else if (a === 'lobby') toLobby();
   else if (a === 'next') nextRound();
+  else if (a === 'pend') togglePend(b.dataset.id);
   else if (a === 'submit') submitWord();
   else if (a === 'unsub') unsubmit();
 });
