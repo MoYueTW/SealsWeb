@@ -131,6 +131,7 @@ const S = {
   cap: 8, secs: 60, wr: 'all', connecting: false, created: false
 };
 const MAXCAP = (window.claude && typeof window.claude.use === 'function') ? 10 : 100;
+const RES_MS = 8000; // how long the round result stays up before the next round
 const BIG = 12; // above this many players, show words grouped instead of one card per person
 const byJ = (a, b) => (a.j - b.j) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 const active = () => S.peers.filter(p => p.j).sort(byJ);
@@ -293,7 +294,7 @@ function hostTick() {
     }
   } else if (g.ph === 'res') {
     if (!t.res || t.k !== g.k) { t.k = g.k; t.res = now; }
-    if (now - t.res > 6000) { nextRound(); return; }
+    if (now - t.res > RES_MS) { nextRound(); return; }
   }
   if (ch) { fitG(g); pushMe(); render(); }
 }
@@ -332,6 +333,8 @@ function sync() {
   const g = S.g; if (!g) return;
   for (const h of g.hist || []) {
     const key = h.g + '.' + h.r;
+    const old = S.hist[key];
+    if (old && (old.win !== h.win || old.hd !== h.hd)) { S.hist[key] = Object.assign({}, old, { win: h.win, hd: h.hd }); }
     if (!S.hist[key]) { const nm = {}; Object.keys(h.w).forEach(id => nm[id] = (g.nm && g.nm[id]) || nameOf(id)); S.hist[key] = Object.assign({}, h, { nm }); }
   }
   if (g.ph === 'in' && !S.seenAt[g.k]) S.seenAt[g.k] = Date.now();
@@ -398,6 +401,12 @@ function submitWord() {
   S.word = v; S.subKey = g.k; S.wOut = null; S.draft = ''; pushMe(); render();
 }
 function unsubmit() { const g = S.g; if (!g || g.ph !== 'in' || S.subKey !== g.k) return; S.draft = S.word; S.draftKey = g.k; S.subKey = null; pushMe(); render(); setTimeout(() => { const el = document.getElementById('word'); if (el) el.focus(); }, 0); }
+function declareWin() {
+  const g = S.hg; if (!S.isHost || !g || g.ph !== 'res') return;
+  const e = g.hist[g.hist.length - 1]; if (!e || e.g !== g.gid || e.r !== g.r) return;
+  e.win = 1; e.hd = 1; g.ph = 'win'; S.ht = {};
+  fitG(g); pushMe(); render();
+}
 function togglePend(id) {
   const g = S.hg; if (!S.isHost || !g || g.ph === 'lobby' || g.seats.includes(id)) return;
   g.pend = g.pend || [];
@@ -510,7 +519,7 @@ function nameList(e, ids, max) { const ns = ids.map(id => nmIn(e, id)); return n
 function groupCards(e, winKey, colors) {
   const { list, empty } = groups(e);
   return `<div class="glist">${list.map((gp, i) => {
-    const c = winKey ? (gp.k === winKey ? COLORS[0] : '') : colors[gp.k];
+    const c = winKey ? ((winKey === '*' || gp.k === winKey) ? COLORS[0] : '') : colors[gp.k];
     const mine = gp.ids.includes(S.id);
     return `<div class="wc gw ${c ? 'm' : ''} ${mine ? 'mine' : ''}" style="animation-delay:${Math.min(i, 15) * 45}ms;${c ? 'background:' + c : ''}"><div class="w">${esc(gp.word)} <span class="cnt">×${gp.ids.length}</span></div><div class="who">${esc(nameList(e, gp.ids, 24))}</div></div>`;
   }).join('')}${empty.length ? `<div class="wc gw"><div class="w none">沒寫 ×${empty.length}</div><div class="who">${esc(nameList(e, empty, 24))}</div></div>` : ''}</div>`;
@@ -570,18 +579,20 @@ function stageHTML() {
   if (g.ph === 'rv') return `<div class="card center"><div class="round" style="justify-content:center"><h2>第 ${g.r} 輪・揭曉中…</h2></div><p class="mut" style="margin-top:6px">收集大家的詞</p></div>`;
   const e = entryFor(g.gid, g.r);
   if (!e) return `<div class="card center"><p class="mut">揭曉中…</p></div>`;
-  const gc = groupColors(e), n = Object.keys(e.w).length, winKey = g.ph === 'win' ? gc.top : null;
-  const cards = n > BIG ? groupCards(e, winKey, gc.colors) : `<div class="grid">${Object.keys(e.w).map((id, i) => { const w = e.w[id], c = winKey ? (norm(w) === winKey ? COLORS[0] : '') : gc.colors[norm(w)]; return `<div class="wc ${c ? 'm' : ''}" style="animation-delay:${i * 70}ms;${c ? 'background:' + c : ''}"><div class="who">${esc((e.nm && e.nm[id]) || nameOf(id))}${id === S.id ? '（你）' : ''}</div><div class="w ${w ? '' : 'none'}">${w ? esc(w) : '沒寫'}</div></div>`; }).join('')}</div>`;
+  const gc = groupColors(e), n = Object.keys(e.w).length, winKey = g.ph === 'win' ? (e.hd ? '*' : gc.top) : null;
+  const cards = n > BIG ? groupCards(e, winKey, gc.colors) : `<div class="grid">${Object.keys(e.w).map((id, i) => { const w = e.w[id], c = winKey ? ((winKey === '*' ? !!norm(w) : norm(w) === winKey) ? COLORS[0] : '') : gc.colors[norm(w)]; return `<div class="wc ${c ? 'm' : ''}" style="animation-delay:${i * 70}ms;${c ? 'background:' + c : ''}"><div class="who">${esc((e.nm && e.nm[id]) || nameOf(id))}${id === S.id ? '（你）' : ''}</div><div class="w ${w ? '' : 'none'}">${w ? esc(w) : '沒寫'}</div></div>`; }).join('')}</div>`;
   if (g.ph === 'win') {
-    const word = (groups(e).list[0] || {}).word || '';
-    return `<div class="card"><div class="win"><div class="em">🎉</div><div class="mut">${gc.max === n ? n + ' 個人' : gc.max + ' / ' + n + ' 人'}在第 ${g.r} 輪相遇了</div><div class="big">${esc(word)}</div></div>${cards}
+    const gl = groups(e).list;
+    const word = e.hd ? gl.slice(0, 4).map(x => x.word).join(' ／ ') + (gl.length > 4 ? ' …' : '') : ((gl[0] || {}).word || '');
+    const line = e.hd ? `房主宣布：意思一樣，第 ${g.r} 輪全員通關` : `${gc.max === n ? n + ' 個人' : gc.max + ' / ' + n + ' 人'}在第 ${g.r} 輪相遇了`;
+    return `<div class="card"><div class="win"><div class="em">🎉</div><div class="mut">${line}</div><div class="big" style="${e.hd && gl.length > 1 ? 'font-size:30px' : ''}">${esc(word)}</div></div>${cards}
       ${S.isHost ? `<button class="btn accent block" data-a="again">再玩一次</button><button class="btn ghost block" style="margin-top:8px" data-a="lobby">回大廳（改人數／時間）</button>` : `<p class="mut center" style="margin-top:12px">等房主開下一場…</p>`}</div>`;
   }
   const need = g.wr === 'maj' ? Math.floor(n / 2) + 1 : n;
   const summary = gc.max >= 2 ? `最多 ${gc.max} / ${n} 人想到同一個詞（要 ${need} 人才過關）` : '大家都寫得不一樣';
   return `<div class="card"><div class="round"><h2>第 ${g.r} 輪結果</h2></div><p class="prompt" style="margin-top:6px">${summary}</p>${cards}
     <div class="bar"><i id="nbar"></i></div><p class="mut" style="margin-top:8px">下一輪即將開始…</p>
-    ${S.isHost ? `<button class="btn ghost block" data-a="next">直接下一輪</button>` : ''}</div>`;
+    ${S.isHost ? `<button class="btn accent block" data-a="declare">意思一樣，宣布全員通關</button><button class="btn ghost block" style="margin-top:8px" data-a="next">直接下一輪</button>` : ''}</div>`;
 }
 
 function renderStatus() {
@@ -628,9 +639,9 @@ function renderHist() {
   const el = document.getElementById('hist'); const g = S.g; if (!el) return;
   if (!g || g.ph === 'lobby') { if (S.histKey !== 'none') { el.innerHTML = ''; S.histKey = 'none'; } return; }
   const list = Object.values(S.hist).filter(h => h.g === g.gid).sort((a, b) => b.r - a.r);
-  const key = g.gid + ':' + list.map(h => h.r).join(',');
+  const key = g.gid + ':' + list.map(h => h.r + (h.win ? (h.hd ? 'd' : 'w') : '')).join(',');
   if (key === S.histKey) return; S.histKey = key;
-  el.innerHTML = list.length ? `<div class="card hist"><h2>歷史紀錄</h2>${list.map(h => `<div class="h"><div class="rn">第 ${h.r} 輪${h.win ? '・相遇 🎉' : ''}</div>${wordChips(h, groupColors(h).colors)}</div>`).join('')}</div>` : '';
+  el.innerHTML = list.length ? `<div class="card hist"><h2>歷史紀錄</h2>${list.map(h => `<div class="h"><div class="rn">第 ${h.r} 輪${h.win ? (h.hd ? '・房主判定通關 🎉' : '・相遇 🎉') : ''}</div>${wordChips(h, groupColors(h).colors)}</div>`).join('')}</div>` : '';
 }
 
 function tickUI() {
@@ -642,7 +653,7 @@ function tickUI() {
   } else if (g.ph === 'in') { const t = document.getElementById('timer'); if (t) t.textContent = '不限時'; }
   if (g.ph === 'res') {
     if (!S.seenAt['res' + g.k]) S.seenAt['res' + g.k] = Date.now();
-    const b = document.getElementById('nbar'); if (b) b.style.width = Math.min(100, 100 * (Date.now() - S.seenAt['res' + g.k]) / 6000) + '%';
+    const b = document.getElementById('nbar'); if (b) b.style.width = Math.min(100, 100 * (Date.now() - S.seenAt['res' + g.k]) / RES_MS) + '%';
   }
 }
 setInterval(() => { if (S.isHost) hostTick(); tickUI(); }, 250);
@@ -665,6 +676,7 @@ document.addEventListener('click', e => {
   else if (a === 'lobby') toLobby();
   else if (a === 'next') nextRound();
   else if (a === 'pend') togglePend(b.dataset.id);
+  else if (a === 'declare') declareWin();
   else if (a === 'submit') submitWord();
   else if (a === 'unsub') unsubmit();
 });
