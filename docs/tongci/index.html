@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>同詞相遇・連線版</title>
+<style>
+:root{--bg:#f4eee3;--ink:#211c17;--mut:#7d7265;--card:#fffaf1;--line:#e4d9c6;--a:#ff5a3c;--b:#23807a;--y:#ffc94a;--ok:#2f9e5b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:560px;margin:0 auto;padding:18px 16px 64px}
+h1{font-size:30px;margin:6px 0 2px;letter-spacing:2px}
+h2{font-size:17px;margin:0 0 10px}
+p{margin:0}
+.hero{text-align:center;padding:10px 0 14px}
+.hero p{color:var(--mut);font-size:14px}
+.logo{display:flex;justify-content:center;margin:4px 0}
+.logo span{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px}
+.logo .l1{background:var(--a)}.logo .l2{background:var(--b);margin-left:-12px;mix-blend-mode:multiply}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 6px}
+label:first-child{margin-top:0}
+input[type=text]{width:100%;font-size:17px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none}
+input[type=text]:focus{border-color:var(--ink)}
+.row{display:flex;gap:8px}.row>input{flex:1;min-width:0}
+.btn{appearance:none;border:1.5px solid var(--ink);background:#fff;color:var(--ink);font-size:16px;font-weight:700;padding:12px 18px;border-radius:12px;cursor:pointer;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--ink);color:#fff}
+.btn.accent{background:var(--a);border-color:var(--a);color:#fff}
+.btn.block{width:100%;margin-top:14px}
+.btn.small{font-size:14px;padding:7px 12px;border-radius:10px}
+.btn.ghost{border-color:var(--line);font-weight:600}
+.btn:disabled{opacity:.4;cursor:default}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper b{font-size:26px;min-width:44px;text-align:center}
+.stepper .btn{width:46px;padding:8px 0;font-size:20px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:64px;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:9px 6px;font-size:15px;cursor:pointer;color:var(--ink)}
+.seg button.on{border-color:var(--ink);background:var(--ink);color:#fff;font-weight:700}
+.err{color:#c0392b;font-size:14px;margin:8px 2px;white-space:pre-line}
+.mut{color:var(--mut);font-size:14px}
+details.rules{margin-top:16px;color:var(--mut);font-size:14px}
+details.rules summary{cursor:pointer;font-weight:700;color:var(--ink)}
+details.rules ol{padding-left:20px;margin:8px 0}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.top .code{font-size:13px;color:var(--mut)}
+.top .code b{display:block;font-size:24px;letter-spacing:4px;color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.1}
+.top .sp{flex:1}
+.dot{width:9px;height:9px;border-radius:50%;background:#bbb;display:inline-block;margin-right:5px;vertical-align:1px}
+.dot.on{background:var(--ok)}
+.round{display:flex;align-items:baseline;justify-content:space-between}
+.round h2{font-size:22px;margin:0}
+.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:22px}
+.timer.low{color:var(--a)}
+.prompt{color:var(--mut);font-size:14px;margin:4px 0 12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:15px}
+.chip small{color:var(--mut);font-size:12px;margin-right:4px}
+.chip.m{border-color:transparent;color:#fff}
+.sent{display:flex;align-items:center;justify-content:space-between;background:#eef7f0;border:1px solid #cfe7d6;border-radius:12px;padding:12px 14px}
+.sent b{font-size:20px}
+.players{list-style:none;margin:0;padding:0}
+.players li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.players li:last-child{border-bottom:0}
+.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;flex:none}
+.players .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{font-size:12px;border-radius:6px;padding:1px 6px;margin-left:4px;background:#efe6d6;color:var(--mut)}
+.tag.h{background:var(--y);color:#5a4300}
+.st{font-size:13px;color:var(--mut)}
+.st.ok{color:var(--ok);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
+.wc{border-radius:14px;padding:10px 12px;background:#fff;border:1px solid var(--line);animation:pop .35s ease both}
+.wc .who{font-size:12px;color:var(--mut)}
+.wc .w{font-size:22px;font-weight:800;word-break:break-all}
+.wc.m{color:#fff;border-color:transparent}.wc.m .who{color:rgba(255,255,255,.85)}
+.wc .w.none{font-size:15px;color:var(--mut);font-weight:600}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+.win{text-align:center;padding:8px 0 4px}
+.win .big{font-size:40px;font-weight:900;letter-spacing:2px;color:var(--a);margin:4px 0;word-break:break-all}
+.win .em{font-size:44px;animation:pop .5s ease both}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--ink);width:0;transition:width .25s linear}
+.hist .h{padding:8px 0;border-bottom:1px dashed var(--line)}
+.hist .h:last-child{border-bottom:0}
+.hist .rn{font-size:13px;color:var(--mut);font-weight:700}
+.hist .chips{margin:4px 0 0}
+.center{text-align:center}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="app" class="wrap"></div>
+<div id="toast" class="toast"></div>
+<script>
+"use strict";
+/* ---------- utils ---------- */
+const ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
+const rid = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => ALPHA[b % ALPHA.length]).join('');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[\s\p{P}\p{S}]/gu, '');
+const bytes = o => new TextEncoder().encode(JSON.stringify(o)).length;
+function store(kind, k, v) { try { const st = kind === 's' ? sessionStorage : localStorage; if (v === undefined) return st.getItem(k); st.setItem(k, v); } catch (e) { return null; } }
+const COLORS = ['#ff5a3c', '#23807a', '#7b5cd6', '#e0962b', '#2f7fd1', '#d94f8c', '#4c9a2a', '#a0522d', '#0f9aa8', '#8a6d00'];
+const colorOf = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; };
+let toastT;
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1800); }
+
+/* ---------- state ---------- */
+const S = {
+  id: store('s', 'tc_id') || (() => { const i = rid(6); store('s', 'tc_id', i); return i; })(),
+  name: store('l', 'tc_name') || '',
+  view: 'home', code: null, tr: null, mode: null, conn: false,
+  peers: [], j: null, isHost: false, hg: null, g: null,
+  word: '', draft: '', subKey: null, wOut: null,
+  hist: {}, seenAt: {}, ht: {}, err: '', stageKey: '', histKey: '',
+  cap: 4, secs: 60, connecting: false, created: false
+};
+const byJ = (a, b) => (a.j - b.j) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+const active = () => S.peers.filter(p => p.j).sort(byJ);
+
+/* ---------- transports (all expose: set(obj), leave()) ---------- */
+async function roomTransport(api, code) {
+  let r = null;
+  try { r = await api.join('tongci-' + code); } catch (e) { r = null; }
+  const t = r || api, lobby = !r;
+  const subs = [];
+  subs.push(t.onPeers(ch => {
+    onPeers(ch.peers.filter(p => p.presence && p.presence.id && (!lobby || p.presence.k === code))
+      .map(p => Object.assign({}, p.presence, { me: p.sameTab })));
+  }, e => fatal(e && e.code)));
+  if (t.onConnection) subs.push(t.onConnection(c => { S.conn = c; renderTop(); }, () => {}));
+  return {
+    set(o) { return t.presence(o).catch(() => {}); },
+    leave() {
+      subs.forEach(u => { try { u(); } catch (e) {} });
+      if (r) r.leave().catch(() => {});
+      else api.presence({ id: null, n: null, j: null, k: null, d: null, w: null, g: null }).catch(() => {});
+    }
+  };
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load')); document.head.appendChild(s); });
+}
+
+async function mqttTransport(code) {
+  if (!window.mqtt) await loadScript('https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js');
+  const base = 'tongci-v1/' + code + '/p/', mine = base + S.id;
+  const c = window.mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+    clientId: 'tc_' + S.id + '_' + rid(4), clean: true, keepalive: 20, reconnectPeriod: 2000, connectTimeout: 8000,
+    will: { topic: mine, payload: '', retain: true, qos: 0 }
+  });
+  const map = new Map(); let me = null, closed = false;
+  const emit = () => onPeers([...map.values()].map(v => Object.assign({}, v.p, { me: v.p.id === S.id })));
+  const pub = () => { if (c.connected && me) c.publish(mine, JSON.stringify(me), { retain: true, qos: 0 }); };
+  c.on('message', (topic, buf) => {
+    const id = topic.slice(base.length); if (id === S.id) return;
+    const s = buf.toString();
+    if (!s) { if (map.delete(id)) emit(); return; }
+    try { const p = JSON.parse(s); if (p && p.id === id) { map.set(id, { p, seen: Date.now() }); emit(); } } catch (e) {}
+  });
+  c.on('close', () => { S.conn = false; renderTop(); });
+  c.on('offline', () => { S.conn = false; renderTop(); });
+  await new Promise((res, rej) => {
+    const to = setTimeout(() => rej(new Error('timeout')), 10000);
+    c.on('connect', () => { S.conn = true; renderTop(); c.subscribe(base + '+', { qos: 0 }, () => { clearTimeout(to); pub(); res(); }); });
+  });
+  const hb = setInterval(() => {
+    pub(); const now = Date.now(); let ch = false;
+    for (const [id, v] of map) if (id !== S.id && now - v.seen > 16000) { map.delete(id); ch = true; }
+    if (ch) emit();
+  }, 5000);
+  const bye = () => { if (closed) return; closed = true; clearInterval(hb); try { c.publish(mine, '', { retain: true }); } catch (e) {} setTimeout(() => { try { c.end(true); } catch (e) {} }, 300); };
+  window.addEventListener('pagehide', bye);
+  let pt = null;
+  return {
+    set(o) { me = Object.assign({}, o, { hb: Date.now() }); map.set(S.id, { p: me, seen: Date.now() }); emit(); clearTimeout(pt); pt = setTimeout(pub, 40); },
+    leave: bye
+  };
+}
+
+// local test transport (same browser, several tabs): add ?local to the URL
+async function bcTransport(code) {
+  const ch = new BroadcastChannel('tongci-' + code); const map = new Map(); let me = null;
+  const emit = () => onPeers([...map.values()].map(v => Object.assign({}, v.p, { me: v.p.id === S.id })));
+  ch.onmessage = e => { const m = e.data; if (!m || m.id === S.id) return; if (m.bye) { map.delete(m.id); emit(); return; } if (m.p) { const isNew = !map.has(m.id); map.set(m.id, { p: m.p, seen: Date.now() }); emit(); if (isNew && me) ch.postMessage({ id: S.id, p: me }); } if (m.hello && me) ch.postMessage({ id: S.id, p: me }); };
+  ch.postMessage({ id: S.id, hello: 1 });
+  const hb = setInterval(() => { if (me) ch.postMessage({ id: S.id, p: me }); const now = Date.now(); for (const [id, v] of map) if (id !== S.id && now - v.seen > 8000) map.delete(id); }, 2000);
+  S.conn = true;
+  return { set(o) { me = o; map.set(S.id, { p: o, seen: Date.now() }); emit(); ch.postMessage({ id: S.id, p: o }); }, leave() { clearInterval(hb); ch.postMessage({ id: S.id, bye: 1 }); ch.close(); } };
+}
+
+/* ---------- presence push (coalesced) ---------- */
+let pushT = null;
+function pushMe() {
+  clearTimeout(pushT);
+  pushT = setTimeout(() => {
+    if (!S.tr) return;
+    S.tr.set({ id: S.id, n: S.name, j: S.j || null, k: S.code, d: S.subKey || null, w: S.wOut || null, g: S.isHost ? S.hg : null });
+  }, 30);
+}
+
+/* ---------- game state (host-authoritative, lives in host presence) ---------- */
+function newG(cap, secs) { return { v: 1, cap, secs, ph: 'lobby', seats: [], nm: {}, gid: 0, r: 0, k: '', hist: [] }; }
+
+function fitG(g) {
+  const keep = new Set(g.seats); g.hist.forEach(h => Object.keys(h.w).forEach(id => keep.add(id)));
+  Object.keys(g.nm).forEach(id => { if (!keep.has(id)) delete g.nm[id]; });
+  while (bytes(g) > 3100 && g.hist.length > 1) {
+    g.hist.shift();
+    const k2 = new Set(g.seats); g.hist.forEach(h => Object.keys(h.w).forEach(id => k2.add(id)));
+    Object.keys(g.nm).forEach(id => { if (!k2.has(id)) delete g.nm[id]; });
+  }
+}
+
+function hostTick() {
+  const g = S.hg; if (!g || !S.isHost) return;
+  const act = active(), ids = act.map(p => p.id), by = Object.fromEntries(act.map(p => [p.id, p]));
+  const now = Date.now(), t = S.ht; let ch = false;
+  if (g.ph === 'lobby') {
+    const seats = ids.slice(0, g.cap);
+    if (seats.join() !== g.seats.join()) { g.seats = seats; ch = true; }
+  } else {
+    const seats = g.seats.filter(id => by[id]);
+    if (seats.length !== g.seats.length) { g.seats = seats; ch = true; }
+    if (g.seats.length < 2) { g.ph = 'lobby'; g.seats = ids.slice(0, g.cap); ch = true; }
+  }
+  for (const id of g.seats) { const n = by[id] && by[id].n; if (n && g.nm[id] !== n) { g.nm[id] = n; ch = true; } }
+  if (g.ph === 'in') {
+    if (t.k !== g.k) { t.k = g.k; t.dl = g.secs ? now + g.secs * 1000 + 900 : 0; }
+    const all = g.seats.every(id => by[id] && by[id].d === g.k);
+    if (all || (t.dl && now > t.dl)) { g.ph = 'rv'; t.rv = now; ch = true; }
+  } else if (g.ph === 'rv') {
+    if (t.k !== g.k || !t.rv) { t.k = g.k; t.rv = now; }
+    const subs = g.seats.filter(id => by[id] && by[id].d === g.k);
+    const allW = subs.every(id => by[id].w && by[id].w.k === g.k);
+    const waitDrafts = now - t.rv > 1500; // give auto-submitted drafts a moment
+    if ((allW && waitDrafts) || now - t.rv > 4000) {
+      const w = {};
+      for (const id of g.seats) { const p = by[id]; w[id] = (p && p.w && p.w.k === g.k) ? String(p.w.t || '').slice(0, 16) : ''; }
+      const vals = g.seats.map(id => norm(w[id]));
+      const win = g.seats.length >= 2 && vals[0] !== '' && vals.every(v => v === vals[0]);
+      g.hist.push({ g: g.gid, r: g.r, w, win: win ? 1 : 0 });
+      g.ph = win ? 'win' : 'res'; t.res = now; ch = true;
+    }
+  } else if (g.ph === 'res') {
+    if (!t.res || t.k !== g.k) { t.k = g.k; t.res = now; }
+    if (now - t.res > 6000) { nextRound(); return; }
+  }
+  if (ch) { fitG(g); pushMe(); render(); }
+}
+function nextRound() { const g = S.hg; if (!g) return; g.r++; g.k = g.gid + '.' + g.r; g.ph = 'in'; S.ht = {}; fitG(g); pushMe(); render(); }
+function startGame() {
+  const g = S.hg; if (!g) return;
+  const ids = active().map(p => p.id);
+  g.seats = ids.slice(0, g.cap);
+  if (g.seats.length < 2) { toast('至少要 2 人才能開始'); return; }
+  g.gid = (g.gid || 0) + 1; g.r = 1; g.k = g.gid + '.1'; g.hist = []; g.ph = 'in'; S.ht = {};
+  fitG(g); pushMe(); render();
+}
+function toLobby() { const g = S.hg; if (!g) return; g.ph = 'lobby'; g.hist = []; S.ht = {}; fitG(g); pushMe(); render(); }
+
+/* ---------- sync on every peers change ---------- */
+function onPeers(list) { S.peers = list; sync(); render(); }
+function sync() {
+  if (!S.tr) return;
+  const act = active(), host = act[0];
+  if (host) {
+    if (host.id === S.id) {
+      if (!S.isHost) { S.isHost = true; S.hg = S.g ? JSON.parse(JSON.stringify(S.g)) : newG(S.cap, S.secs); S.ht = {}; pushMe(); }
+    } else if (S.isHost && host.j < S.j) { S.isHost = false; pushMe(); }
+  }
+  const hp = act.find(p => p.g && p.id === (host && host.id)) || act.find(p => p.g);
+  if (S.isHost) S.g = S.hg; else if (hp && hp.g) S.g = hp.g;
+  const g = S.g; if (!g) return;
+  for (const h of g.hist || []) {
+    const key = h.g + '.' + h.r;
+    if (!S.hist[key]) { const nm = {}; Object.keys(h.w).forEach(id => nm[id] = (g.nm && g.nm[id]) || nameOf(id)); S.hist[key] = Object.assign({}, h, { nm }); }
+  }
+  if (g.ph === 'in' && !S.seenAt[g.k]) S.seenAt[g.k] = Date.now();
+  if (g.ph === 'rv' || g.ph === 'res' || g.ph === 'win') {
+    const seated = (g.seats || []).includes(S.id);
+    if (seated && S.subKey !== g.k && g.ph === 'rv' && S.draft.trim() && S.draftKey === g.k) { S.word = S.draft.trim().slice(0, 16); S.subKey = g.k; }
+    if (S.subKey === g.k && (!S.wOut || S.wOut.k !== g.k)) { S.wOut = { k: g.k, t: S.word }; pushMe(); }
+  }
+  if (S.isHost) hostTick();
+}
+function nameOf(id) { const p = S.peers.find(x => x.id === id); return (p && p.n) || (S.g && S.g.nm && S.g.nm[id]) || '？'; }
+
+function fatal(code) {
+  if (code === 'not_granted' || code === 'revoked') {
+    S.err = '這個頁面沒有連線權限。\n要一起玩的人需要用 claude.ai 帳號開啟、並且被分享這個頁面。';
+    leave(true);
+  }
+}
+
+/* ---------- actions ---------- */
+async function enter(code, create) {
+  const nameEl = document.getElementById('name');
+  const name = (nameEl ? nameEl.value : S.name).trim().slice(0, 12);
+  if (!name) { S.err = '先輸入暱稱'; render(); return; }
+  if (!/^[a-z0-9]{4,6}$/.test(code)) { S.err = '房間碼格式不對（4–6 個英數字）'; render(); return; }
+  S.name = name; store('l', 'tc_name', name);
+  S.err = ''; S.connecting = true; render();
+  let tr;
+  try {
+    if (/[?&]local\b/.test(location.search)) { tr = await bcTransport(code); S.mode = 'local'; }
+    else if (window.claude && typeof window.claude.use === 'function') {
+      const api = await Promise.race([window.claude.use('room'), sleep(10000).then(() => null)]);
+      if (!api) throw new Error('room');
+      S.code = code; tr = await roomTransport(api, code); S.mode = 'room';
+    } else { S.code = code; tr = await mqttTransport(code); S.mode = 'mqtt'; }
+  } catch (e) {
+    S.connecting = false; S.code = null;
+    S.err = S.mode === 'room' || (window.claude && window.claude.use) ? '連不上即時連線。\n一起玩的人要用 claude.ai 帳號開啟、且被分享這個頁面。' : '連線失敗，請檢查網路後再試一次。';
+    render(); return;
+  }
+  Object.assign(S, { code, tr, view: 'room', connecting: false, peers: [], g: null, hg: null, isHost: false, hist: {}, seenAt: {}, ht: {}, subKey: null, wOut: null, word: '', draft: '', stageKey: '', histKey: '', created: create });
+  try { history.replaceState(null, '', '#r-' + code); } catch (e) {}
+  if (create) { S.j = Date.now(); S.isHost = true; S.hg = newG(S.cap, S.secs); S.g = S.hg; pushMe(); }
+  else { S.j = null; pushMe(); setTimeout(assignJ, 1600); }
+  render();
+}
+function assignJ() {
+  if (!S.tr || S.j) return;
+  const js = S.peers.filter(p => !p.me && p.j).map(p => p.j);
+  S.j = js.length ? Math.max(...js) + 1 : Date.now();
+  pushMe(); sync(); render();
+}
+function leave(silent) {
+  if (S.tr) { try { S.tr.leave(); } catch (e) {} }
+  Object.assign(S, { tr: null, view: 'home', code: null, peers: [], isHost: false, hg: null, g: null, j: null, conn: false, stageKey: '', histKey: '' });
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  render();
+}
+function submitWord() {
+  const g = S.g, el = document.getElementById('word'); if (!g || g.ph !== 'in' || !el) return;
+  const v = el.value.trim().slice(0, 16);
+  if (!v) { el.focus(); return; }
+  if (!norm(v)) { toast('請輸入文字'); return; }
+  S.word = v; S.subKey = g.k; S.wOut = null; S.draft = ''; pushMe(); render();
+}
+function unsubmit() { const g = S.g; if (!g || g.ph !== 'in' || S.subKey !== g.k) return; S.draft = S.word; S.draftKey = g.k; S.subKey = null; pushMe(); render(); setTimeout(() => { const el = document.getElementById('word'); if (el) el.focus(); }, 0); }
+function setOpt(k, v) { if (S.isHost && S.hg && S.hg.ph === 'lobby') { S.hg[k] = v; if (k === 'cap') S.cap = v; else S.secs = v; fitG(S.hg); hostTick(); pushMe(); render(); } }
+function copyCode() {
+  const txt = S.mode === 'mqtt' ? location.origin + location.pathname + '#r-' + S.code : S.code;
+  try { navigator.clipboard.writeText(txt).then(() => toast(S.mode === 'mqtt' ? '已複製邀請連結' : '已複製房間碼'), () => toast('房間碼：' + S.code)); } catch (e) { toast('房間碼：' + S.code); }
+}
+
+/* ---------- render ---------- */
+const app = document.getElementById('app');
+function render() { if (S.view === 'home') renderHome(); else renderRoom(); }
+
+function renderHome() {
+  const hashCode = (location.hash.match(/^#r-([a-z0-9]{4,6})$/) || [])[1] || '';
+  const prevCode = document.getElementById('code'); const codeVal = prevCode ? prevCode.value : hashCode;
+  const prevName = document.getElementById('name'); const nameVal = prevName ? prevName.value : S.name;
+  S.stageKey = '';
+  app.innerHTML = `
+  <div class="hero">
+    <div class="logo"><span class="l1">詞</span><span class="l2">詞</span></div>
+    <h1>同詞相遇</h1>
+    <p>大家同時寫下一個詞，直到所有人寫出同一個詞</p>
+  </div>
+  <div class="card">
+    <label for="name">你的暱稱</label>
+    <input type="text" id="name" maxlength="12" placeholder="輸入暱稱" value="${esc(nameVal)}" autocomplete="off">
+  </div>
+  ${hashCode ? '' : `
+  <div class="card">
+    <h2>建立房間</h2>
+    <label>人數上限</label>
+    <div class="stepper"><button class="btn ghost" data-a="cap-">－</button><b id="capv">${S.cap}</b><button class="btn ghost" data-a="cap+">＋</button><span class="mut">人（2–10）</span></div>
+    <label>每輪思考時間</label>
+    <div class="seg">${[[0,'不限'],[30,'30 秒'],[60,'60 秒'],[90,'90 秒']].map(([v,l]) => `<button data-a="secs" data-v="${v}" class="${S.secs===v?'on':''}">${l}</button>`).join('')}</div>
+    <button class="btn primary block" data-a="create" ${S.connecting?'disabled':''}>${S.connecting?'連線中…':'建立房間'}</button>
+  </div>`}
+  <div class="card">
+    <h2>加入房間</h2>
+    <div class="row"><input type="text" id="code" maxlength="6" placeholder="房間碼" value="${esc(codeVal)}" autocapitalize="off" autocomplete="off" spellcheck="false">
+    <button class="btn ${hashCode?'primary':''}" data-a="join" ${S.connecting?'disabled':''}>${S.connecting&&hashCode?'連線中…':'加入'}</button></div>
+    ${hashCode ? `<p class="mut" style="margin-top:8px">輸入暱稱後按加入。<a href="#" data-a="clearhash">改成自己建立房間</a></p>` : ''}
+  </div>
+  ${S.err ? `<p class="err">${esc(S.err)}</p>` : ''}
+  <details class="rules"><summary>怎麼玩</summary>
+    <ol><li>每輪所有人同時輸入一個詞，全部送出（或時間到）後一起揭曉。</li>
+    <li>如果所有人的詞完全一樣，就成功「相遇」，遊戲結束。</li>
+    <li>沒對上的話，看看上一輪大家寫了什麼，想一個所有人都會聯想到的詞，進入下一輪。</li>
+    <li>不能用講的、不能互相指定，只能靠默契。</li></ol>
+    <p>房主可以在大廳調整人數上限（2–10）與每輪時間；超過上限的人會變成觀戰。</p>
+  </details>`;
+}
+
+function renderTop() {
+  const el = document.getElementById('top'); if (!el || S.view !== 'room') return;
+  const g = S.g, n = g ? g.seats.length : 0;
+  el.innerHTML = `<div class="code">房間碼<b>${esc(S.code)}</b></div>
+    <button class="btn small ghost" data-a="copy">${S.mode === 'mqtt' ? '複製邀請連結' : '複製房間碼'}</button>
+    <div class="sp"></div>
+    <span class="st"><span class="dot ${S.conn ? 'on' : ''}"></span>${S.conn ? '已連線' : '連線中'}</span>
+    <button class="btn small ghost" data-a="leave">離開</button>`;
+}
+
+function stageKeyOf() {
+  const g = S.g;
+  if (!g) return 'wait';
+  const seated = g.seats.includes(S.id);
+  if (g.ph === 'lobby') return ['lobby', S.isHost, g.cap, g.secs, g.seats.length, seated].join('|');
+  if (g.ph === 'in') return ['in', g.k, S.subKey === g.k, seated, S.isHost].join('|');
+  if (g.ph === 'rv') return 'rv|' + g.k;
+  return [g.ph, g.k, S.isHost, (g.hist || []).length].join('|');
+}
+
+function renderRoom() {
+  if (!document.getElementById('top')) {
+    app.innerHTML = `<div class="top" id="top"></div><div id="stage"></div><div class="card"><h2 id="ptitle">玩家</h2><ul class="players" id="players"></ul></div><div id="hist"></div>`;
+    S.stageKey = ''; S.histKey = '';
+  }
+  renderTop();
+  const key = stageKeyOf();
+  if (key !== S.stageKey) {
+    const prevInput = document.getElementById('word');
+    if (prevInput && S.g && S.g.ph === 'in') { S.draft = prevInput.value; S.draftKey = S.g.k; }
+    S.stageKey = key; document.getElementById('stage').innerHTML = stageHTML();
+    const w = document.getElementById('word');
+    if (w) { w.value = S.draftKey === (S.g && S.g.k) ? S.draft : ''; w.addEventListener('input', () => { S.draft = w.value; S.draftKey = S.g && S.g.k; }); w.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); submitWord(); } }); }
+  }
+  renderStatus();
+  renderPlayers();
+  renderHist();
+  tickUI();
+}
+
+function wordChips(entry, matchColors) {
+  if (!entry) return '';
+  return `<div class="chips">${Object.keys(entry.w).map(id => {
+    const w = entry.w[id], c = matchColors && matchColors[norm(w)];
+    return `<span class="chip ${c ? 'm' : ''}" ${c ? `style="background:${c}"` : ''}><small style="${c ? 'color:rgba(255,255,255,.85)' : ''}">${esc((entry.nm && entry.nm[id]) || nameOf(id))}</small>${w ? esc(w) : '<span class="mut">（沒寫）</span>'}</span>`;
+  }).join('')}</div>`;
+}
+function groupColors(entry) {
+  const cnt = {}; Object.values(entry.w).forEach(w => { const n = norm(w); if (n) cnt[n] = (cnt[n] || 0) + 1; });
+  const out = {}; let i = 0; Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).forEach(n => { if (cnt[n] >= 2) out[n] = COLORS[i++ % COLORS.length]; });
+  return { colors: out, max: Math.max(0, ...Object.values(cnt)), top: Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] };
+}
+function entryFor(gid, r) { return S.hist[gid + '.' + r] || ((S.g && S.g.hist) || []).find(h => h.g === gid && h.r === r); }
+
+function stageHTML() {
+  const g = S.g;
+  if (!g) return `<div class="card center"><p class="mut">正在同步房間狀態…</p></div>`;
+  const seated = g.seats.includes(S.id);
+  if (g.ph === 'lobby') {
+    const hostCtl = S.isHost ? `
+      <label>人數上限</label>
+      <div class="stepper"><button class="btn ghost" data-a="hcap-">－</button><b>${g.cap}</b><button class="btn ghost" data-a="hcap+">＋</button><span class="mut">人</span></div>
+      <label>每輪思考時間</label>
+      <div class="seg">${[[0,'不限'],[30,'30 秒'],[60,'60 秒'],[90,'90 秒']].map(([v,l]) => `<button data-a="hsecs" data-v="${v}" class="${g.secs===v?'on':''}">${l}</button>`).join('')}</div>
+      <button class="btn accent block" data-a="start" ${g.seats.length < 2 ? 'disabled' : ''}>${g.seats.length < 2 ? '等待其他玩家加入…' : `開始遊戲（${g.seats.length} 人）`}</button>` :
+      `<p class="mut" style="margin-top:8px">人數上限 ${g.cap} 人・每輪 ${g.secs ? g.secs + ' 秒' : '不限時'}</p><p style="margin-top:10px;font-weight:700">${seated ? '等待房主開始遊戲…' : '房間已滿，你目前是觀戰，下一場有空位會自動入座'}</p>`;
+    return `<div class="card"><h2>大廳</h2><p class="mut">把房間碼 <b style="color:var(--ink)">${esc(S.code)}</b> 給朋友${S.mode === 'room' ? '（他們打開同一個頁面後輸入）' : '，或直接傳邀請連結'}。</p>${hostCtl}</div>`;
+  }
+  if (g.ph === 'in') {
+    const prev = g.r > 1 ? entryFor(g.gid, g.r - 1) : null;
+    const pc = prev ? groupColors(prev).colors : null;
+    const sub = S.subKey === g.k;
+    let body;
+    if (!seated) body = `<p class="mut">你在觀戰中，等下一場再加入。</p>`;
+    else if (sub) body = `<div class="sent"><div><div class="mut">你寫了</div><b>${esc(S.word)}</b></div><button class="btn small ghost" data-a="unsub">修改</button></div><p class="mut" style="margin-top:8px">等其他人送出…</p>`;
+    else body = `<div class="row"><input type="text" id="word" maxlength="16" placeholder="${g.r === 1 ? '隨便想一個詞' : '想一個大家都會寫的詞'}" autocomplete="off" enterkeyhint="send"><button class="btn primary" data-a="submit">送出</button></div>`;
+    return `<div class="card">
+      <div class="round"><h2>第 ${g.r} 輪</h2><span class="timer" id="timer"></span></div>
+      ${prev ? `<p class="prompt">上一輪大家寫了：</p>${wordChips(prev, pc)}<p class="prompt">找出大家都會聯想到的那個詞</p>` : `<p class="prompt">第一輪：每個人隨便寫一個詞，什麼都可以</p>`}
+      ${body}
+      ${g.secs ? '<div class="bar"><i id="tbar"></i></div>' : ''}
+      <p class="mut" id="substat" style="margin-top:10px"></p>
+    </div>`;
+  }
+  if (g.ph === 'rv') return `<div class="card center"><div class="round" style="justify-content:center"><h2>第 ${g.r} 輪・揭曉中…</h2></div><p class="mut" style="margin-top:6px">收集大家的詞</p></div>`;
+  const e = entryFor(g.gid, g.r);
+  if (!e) return `<div class="card center"><p class="mut">揭曉中…</p></div>`;
+  const gc = groupColors(e);
+  const cards = `<div class="grid">${Object.keys(e.w).map((id, i) => { const w = e.w[id], c = g.ph === 'win' ? COLORS[0] : gc.colors[norm(w)]; return `<div class="wc ${c ? 'm' : ''}" style="animation-delay:${i * 70}ms;${c ? 'background:' + c : ''}"><div class="who">${esc((e.nm && e.nm[id]) || nameOf(id))}${id === S.id ? '（你）' : ''}</div><div class="w ${w ? '' : 'none'}">${w ? esc(w) : '沒寫'}</div></div>`; }).join('')}</div>`;
+  if (g.ph === 'win') {
+    const word = Object.values(e.w)[0];
+    return `<div class="card"><div class="win"><div class="em">🎉</div><div class="mut">${Object.keys(e.w).length} 個人在第 ${g.r} 輪相遇了</div><div class="big">${esc(word)}</div></div>${cards}
+      ${S.isHost ? `<button class="btn accent block" data-a="again">再玩一次</button><button class="btn ghost block" style="margin-top:8px" data-a="lobby">回大廳（改人數／時間）</button>` : `<p class="mut center" style="margin-top:12px">等房主開下一場…</p>`}</div>`;
+  }
+  const n = Object.keys(e.w).length;
+  const summary = gc.max >= 2 ? `${gc.max} / ${n} 人想到同一個詞，差一點！` : '大家都寫得不一樣';
+  return `<div class="card"><div class="round"><h2>第 ${g.r} 輪結果</h2></div><p class="prompt" style="margin-top:6px">${summary}</p>${cards}
+    <div class="bar"><i id="nbar"></i></div><p class="mut" style="margin-top:8px">下一輪即將開始…</p>
+    ${S.isHost ? `<button class="btn ghost block" data-a="next">直接下一輪</button>` : ''}</div>`;
+}
+
+function renderStatus() {
+  const el = document.getElementById('substat'); const g = S.g; if (!el || !g || g.ph !== 'in') return;
+  const by = Object.fromEntries(S.peers.map(p => [p.id, p]));
+  const done = g.seats.filter(id => by[id] && by[id].d === g.k).length;
+  el.textContent = `已送出 ${done} / ${g.seats.length}`;
+}
+
+function renderPlayers() {
+  const el = document.getElementById('players'); if (!el) return;
+  const g = S.g, act = active(), joining = S.peers.filter(p => !p.j);
+  const hostId = act[0] && act[0].id;
+  const seats = g ? g.seats : [];
+  document.getElementById('ptitle').textContent = g ? `玩家 ${seats.length} / ${g.cap}` : '玩家';
+  const rows = act.map(p => {
+    const seated = seats.includes(p.id);
+    let st = '';
+    if (!g) st = '';
+    else if (!seated) st = '<span class="st">觀戰</span>';
+    else if (g.ph === 'in') st = p.d === g.k ? '<span class="st ok">已送出 ✓</span>' : '<span class="st">思考中…</span>';
+    else if (g.ph === 'lobby') st = '<span class="st ok">已入座</span>';
+    return `<li><span class="av" style="background:${colorOf(p.id)}">${esc((p.n || '?').slice(0, 1))}</span><span class="nm">${esc(p.n || '？')}${p.id === hostId ? '<span class="tag h">房主</span>' : ''}${p.id === S.id ? '<span class="tag">你</span>' : ''}</span>${st}</li>`;
+  }).concat(joining.map(p => `<li><span class="av" style="background:#bbb">${esc((p.n || '?').slice(0, 1))}</span><span class="nm">${esc(p.n || '？')}${p.id === S.id ? '<span class="tag">你</span>' : ''}</span><span class="st">加入中…</span></li>`));
+  el.innerHTML = rows.join('') || '<li class="mut">連線中…</li>';
+}
+
+function renderHist() {
+  const el = document.getElementById('hist'); const g = S.g; if (!el) return;
+  if (!g || g.ph === 'lobby') { if (S.histKey !== 'none') { el.innerHTML = ''; S.histKey = 'none'; } return; }
+  const list = Object.values(S.hist).filter(h => h.g === g.gid).sort((a, b) => b.r - a.r);
+  const key = g.gid + ':' + list.map(h => h.r).join(',');
+  if (key === S.histKey) return; S.histKey = key;
+  el.innerHTML = list.length ? `<div class="card hist"><h2>歷史紀錄</h2>${list.map(h => `<div class="h"><div class="rn">第 ${h.r} 輪${h.win ? '・相遇 🎉' : ''}</div>${wordChips(h, groupColors(h).colors)}</div>`).join('')}</div>` : '';
+}
+
+function tickUI() {
+  const g = S.g; if (!g || S.view !== 'room') return;
+  if (g.ph === 'in' && g.secs) {
+    const start = S.seenAt[g.k] || Date.now(), left = Math.max(0, g.secs * 1000 - (Date.now() - start));
+    const t = document.getElementById('timer'); if (t) { t.textContent = Math.ceil(left / 1000) + ' 秒'; t.classList.toggle('low', left < 10000); }
+    const b = document.getElementById('tbar'); if (b) b.style.width = (100 * left / (g.secs * 1000)) + '%';
+  } else if (g.ph === 'in') { const t = document.getElementById('timer'); if (t) t.textContent = '不限時'; }
+  if (g.ph === 'res') {
+    if (!S.seenAt['res' + g.k]) S.seenAt['res' + g.k] = Date.now();
+    const b = document.getElementById('nbar'); if (b) b.style.width = Math.min(100, 100 * (Date.now() - S.seenAt['res' + g.k]) / 6000) + '%';
+  }
+}
+setInterval(() => { if (S.isHost) hostTick(); tickUI(); }, 250);
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const a = b.dataset.a;
+  if (a === 'cap-' || a === 'cap+') { const n = document.getElementById('name'); if (n) S.name = n.value; S.cap = Math.max(2, Math.min(10, S.cap + (a === 'cap+' ? 1 : -1))); render(); }
+  else if (a === 'secs') { const n = document.getElementById('name'); if (n) S.name = n.value; S.secs = +b.dataset.v; render(); }
+  else if (a === 'create') enter(rid(4), true);
+  else if (a === 'join') { const c = (document.getElementById('code').value || '').trim().toLowerCase(); enter(c, false); }
+  else if (a === 'clearhash') { e.preventDefault(); try { history.replaceState(null, '', location.pathname + location.search); } catch (x) {} render(); }
+  else if (a === 'leave') leave();
+  else if (a === 'copy') copyCode();
+  else if (a === 'hcap-' || a === 'hcap+') setOpt('cap', Math.max(2, Math.min(10, S.hg.cap + (a === 'hcap+' ? 1 : -1))));
+  else if (a === 'hsecs') setOpt('secs', +b.dataset.v);
+  else if (a === 'start' || a === 'again') startGame();
+  else if (a === 'lobby') toLobby();
+  else if (a === 'next') nextRound();
+  else if (a === 'submit') submitWord();
+  else if (a === 'unsub') unsubmit();
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.isComposing || S.view !== 'home') return;
+  if (e.target && e.target.id === 'code') { e.preventDefault(); document.querySelector('[data-a="join"]').click(); }
+});
+window.addEventListener('hashchange', () => { if (S.view === 'home') render(); });
+render();
+</script>
+</body>
+</html>
