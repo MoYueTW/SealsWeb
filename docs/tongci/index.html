@@ -3,108 +3,240 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2A2DE0">
 <title>同詞相遇・連線版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Unbounded:wght@700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4eee3;--ink:#211c17;--mut:#7d7265;--card:#fffaf1;--line:#e4d9c6;--a:#ff5a3c;--b:#23807a;--y:#ffc94a;--ok:#2f9e5b}
+:root{
+  --bg:#2A2DE0;--bg2:#1B1DA8;--ink:#11123B;--mut:#5D6092;--paper:#fff;--soft:#F0F0FF;--line:#D9DAF5;
+  --y:#FFD43B;--yd:#D9A800;--p:#FF4F8B;--pd:#D62E69;--ok:#0A9A6C;--mix:#FF4220;
+  --disp:"Unbounded","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,sans-serif;
+}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;-webkit-tap-highlight-color:transparent}
-.wrap{max-width:560px;margin:0 auto;padding:18px 16px 64px}
-h1{font-size:30px;margin:6px 0 2px;letter-spacing:2px}
-h2{font-size:17px;margin:0 0 10px}
-p{margin:0}
-.hero{text-align:center;padding:10px 0 14px}
-.hero p{color:var(--mut);font-size:14px}
-.logo{display:flex;justify-content:center;margin:4px 0}
-.logo span{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px}
-.logo .l1{background:var(--a)}.logo .l2{background:var(--b);margin-left:-12px;mix-blend-mode:multiply}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 1px 0 rgba(0,0,0,.03)}
-label{display:block;font-size:13px;color:var(--mut);margin:10px 0 6px}
-label:first-child{margin-top:0}
-input[type=text]{width:100%;font-size:17px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none}
-input[type=text]:focus{border-color:var(--ink)}
-.row{display:flex;gap:8px}.row>input{flex:1;min-width:0}
-.btn{appearance:none;border:1.5px solid var(--ink);background:#fff;color:var(--ink);font-size:16px;font-weight:700;padding:12px 18px;border-radius:12px;cursor:pointer;white-space:nowrap}
-.btn:active{transform:translateY(1px)}
-.btn.primary{background:var(--ink);color:#fff}
-.btn.accent{background:var(--a);border-color:var(--a);color:#fff}
-.btn.block{width:100%;margin-top:14px}
-.btn.small{font-size:14px;padding:7px 12px;border-radius:10px}
-.btn.ghost{border-color:var(--line);font-weight:600}
-.btn:disabled{opacity:.4;cursor:default}
-.stepper{display:flex;align-items:center;gap:12px}
-.stepper b{font-size:26px;min-width:44px;text-align:center}
-.rng{width:100%;margin:10px 0 2px;accent-color:var(--ink)}
-.stepper .btn{width:46px;padding:8px 0;font-size:20px}
-.seg{display:flex;gap:6px;flex-wrap:wrap}
-.seg button{flex:1;min-width:64px;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:9px 6px;font-size:15px;cursor:pointer;color:var(--ink)}
-.seg button.on{border-color:var(--ink);background:var(--ink);color:#fff;font-weight:700}
-.err{color:#c0392b;font-size:14px;margin:8px 2px;white-space:pre-line}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--body);-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+body::before,body::after{content:"";position:fixed;border-radius:50%;pointer-events:none;z-index:0}
+body::before{width:70vmax;height:70vmax;left:-28vmax;top:-22vmax;background:var(--p);opacity:.2}
+body::after{width:64vmax;height:64vmax;right:-26vmax;bottom:-24vmax;background:var(--y);opacity:.16}
+h1,h2,p,ol,ul{margin:0}
+button,input{font-family:inherit}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--y);outline-offset:2px}
+.card :focus-visible,.modal :focus-visible{outline-color:var(--bg)}
+
+.wrap{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:18px 16px 72px}
+.card{background:var(--paper);border-radius:24px;padding:20px;box-shadow:0 10px 0 rgba(10,11,70,.28)}
+.room{display:grid;gap:22px}
+.room aside{display:grid;gap:22px;align-content:start;min-width:0}
+.room main{min-width:0}
+#hist:empty{display:none}
+.card h2{font-size:19px;font-weight:900;line-height:1.3}
 .mut{color:var(--mut);font-size:14px}
-details.rules{margin-top:16px;color:var(--mut);font-size:14px}
-details.rules summary{cursor:pointer;font-weight:700;color:var(--ink)}
-details.rules ol{padding-left:20px;margin:8px 0}
-.top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.top .code{font-size:13px;color:var(--mut)}
-.top .code b{display:block;font-size:24px;letter-spacing:4px;color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.1}
-.top .sp{flex:1}
-.dot{width:9px;height:9px;border-radius:50%;background:#bbb;display:inline-block;margin-right:5px;vertical-align:1px}
-.dot.on{background:var(--ok)}
-.round{display:flex;align-items:baseline;justify-content:space-between}
-.round h2{font-size:22px;margin:0}
-.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:22px}
-.timer.low{color:var(--a)}
-.prompt{color:var(--mut);font-size:14px;margin:4px 0 12px}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
-.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:15px}
-.chip small{color:var(--mut);font-size:12px;margin-right:4px}
-.chip.m{border-color:transparent;color:#fff}
-.sent{display:flex;align-items:center;justify-content:space-between;background:#eef7f0;border:1px solid #cfe7d6;border-radius:12px;padding:12px 14px}
-.sent b{font-size:20px}
-.players{list-style:none;margin:0;padding:0}
-.players li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
-.players li:last-child{border-bottom:0}
-.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;flex:none}
-.players .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tag{font-size:12px;border-radius:6px;padding:1px 6px;margin-left:4px;background:#efe6d6;color:var(--mut)}
-.tag.h{background:var(--y);color:#5a4300}
-.st{font-size:13px;color:var(--mut)}
-.st.ok{color:var(--ok);font-weight:700}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
-.wc{border-radius:14px;padding:10px 12px;background:#fff;border:1px solid var(--line);animation:pop .35s ease both}
-.wc .who{font-size:12px;color:var(--mut)}
-.wc .w{font-size:22px;font-weight:800;word-break:break-all}
-.wc.m{color:#fff;border-color:transparent}.wc.m .who{color:rgba(255,255,255,.85)}
-.glist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.wc.gw .who{margin-top:2px;line-height:1.45}
-.wc.mine{outline:2.5px solid var(--ink);outline-offset:-2px}
-.cnt{font-size:15px;font-weight:700;opacity:.75}
-.players.compact{display:flex;flex-wrap:wrap;gap:6px}
-.players.compact li{border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 3px;gap:6px;font-size:14px;background:#fff}
-.players.compact li:last-child{border-bottom:1px solid var(--line)}
-.players.compact li.done{border-color:var(--ok);color:var(--ok);font-weight:700}
-.players.compact li.spec{opacity:.55}
-.players.compact li.pend{border-color:var(--b);color:var(--b);font-weight:700}
-.players.compact li.pick{cursor:pointer;opacity:1;border-style:dashed}
-.players.compact .av{width:22px;height:22px;font-size:11px}
-.wc .w.none{font-size:15px;color:var(--mut);font-weight:600}
-@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
-.win{text-align:center;padding:8px 0 4px}
-.win .big{font-size:40px;font-weight:900;letter-spacing:2px;color:var(--a);margin:4px 0;word-break:break-all}
-.win .em{font-size:44px;animation:pop .5s ease both}
-.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:12px}
-.bar i{display:block;height:100%;background:var(--ink);width:0;transition:width .25s linear}
-.hist .h{padding:8px 0;border-bottom:1px dashed var(--line)}
-.hist .h:last-child{border-bottom:0}
-.hist .rn{font-size:13px;color:var(--mut);font-weight:700}
-.hist .chips{margin:4px 0 0}
 .center{text-align:center}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+
+/* venn: the two circles that meet */
+.venn{position:relative;isolation:isolate;--gap:22%;width:min(100%,360px);aspect-ratio:1.62;margin:0 auto}
+.venn i{position:absolute;top:0;left:50%;height:100%;aspect-ratio:1;border-radius:50%;margin-left:calc(-0.5 * 100% / 1.62);transition:transform .7s cubic-bezier(.3,1.3,.5,1)}
+.venn .c1{background:var(--p);transform:translateX(calc(-1 * var(--gap)))}
+.venn .c2{background:var(--y);mix-blend-mode:multiply;transform:translateX(var(--gap))}
+.venn b{position:absolute;inset:0;display:grid;place-items:center;z-index:2;text-align:center;color:#fff;font-family:var(--disp);font-weight:900;line-height:1.1;text-shadow:0 .06em 0 var(--ink);padding:0 4%;word-break:break-all}
+
+/* buttons */
+.btn{appearance:none;border:0;border-radius:16px;min-height:50px;padding:12px 20px;font-size:17px;font-weight:700;line-height:1.2;cursor:pointer;color:var(--ink);background:var(--soft);box-shadow:0 4px 0 var(--line);transition:transform .08s,box-shadow .08s;white-space:nowrap}
+.btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.btn.primary{background:var(--y);box-shadow:0 4px 0 var(--yd)}
+.btn.primary:active:not(:disabled){box-shadow:0 1px 0 var(--yd)}
+.btn.pink{background:var(--p);color:#fff;box-shadow:0 4px 0 var(--pd)}
+.btn.pink:active:not(:disabled){box-shadow:0 1px 0 var(--pd)}
+.btn.block{display:block;width:100%;margin-top:14px}
+.btn.small{min-height:36px;font-size:14px;padding:6px 14px;border-radius:12px;box-shadow:0 3px 0 var(--line)}
+.btn.small.primary{box-shadow:0 3px 0 var(--yd)}
+.btn:disabled{opacity:.45;cursor:default}
+.linkbtn{appearance:none;border:0;background:none;color:var(--bg);font-size:14px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:10px 0 0}
+
+/* fields */
+label,.lab{display:block;font-size:14px;font-weight:700;color:var(--mut);margin:0 0 8px}
+input[type=text],input[type=number]{width:100%;min-height:54px;font-size:18px;font-weight:500;padding:12px 16px;border:2px solid var(--line);border-radius:16px;background:var(--soft);color:var(--ink);outline:none}
+input[type=text]:focus,input[type=number]:focus{border-color:var(--bg);background:#fff}
+input::placeholder{color:#9A9CC4}
+.row{display:flex;gap:10px}.row>input{flex:1;min-width:0}
+.err{color:var(--pd);font-size:14px;font-weight:700;margin-top:12px;white-space:pre-line}
+.or{display:flex;align-items:center;gap:12px;color:var(--mut);font-size:13px;margin:18px 0 14px}
+.or::before,.or::after{content:"";flex:1;height:2px;background:var(--line);border-radius:1px}
+
+/* home */
+.home{display:grid;gap:22px;grid-template-areas:"hero" "panel" "how";padding-top:28px}
+.hero{grid-area:hero;text-align:center;color:#fff}
+.hero .venn{width:min(64%,240px)}
+.hero h1{font-size:clamp(46px,14vw,64px);font-weight:900;letter-spacing:.06em;line-height:1.1;margin-top:10px}
+.hero .tag{font-size:17px;font-weight:500;opacity:.92;margin-top:10px;line-height:1.6}
+.panel{grid-area:panel}
+.how{grid-area:how;color:#fff;list-style:none;padding:0;counter-reset:s;display:grid;gap:12px;font-size:15px}
+.how li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;line-height:1.55}
+.how li::before{content:counter(s);flex:none;width:28px;height:28px;border-radius:50%;background:#fff;color:var(--bg);font-family:var(--disp);font-weight:900;font-size:13px;display:grid;place-items:center;margin-top:-1px}
+.how .note{opacity:.8;padding-left:40px}
+.how .note::before{display:none}
+
+/* room top bar */
+.top{display:flex;align-items:center;gap:10px;color:#fff;margin-bottom:16px;flex-wrap:wrap}
+.top .code{line-height:1.1}
+.top .code span{display:block;font-size:12px;font-weight:500;opacity:.8;margin-bottom:3px}
+.top .code b{font-family:var(--disp);font-weight:900;font-size:26px;letter-spacing:.08em}
+.top .sp{flex:1}
+.pill{appearance:none;border:0;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:14px;font-weight:700;padding:9px 14px;cursor:pointer;white-space:nowrap}
+.pill:active{background:rgba(255,255,255,.28)}
+.conn{font-size:13px;font-weight:500;opacity:.9;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.4);display:inline-block;margin-right:6px}
+.dot.on{background:#2EE6A6}
+
+/* settings */
+.set{margin-top:18px}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper b{font-family:var(--disp);font-size:28px;font-weight:900;min-width:64px;text-align:center}
+.stepper .btn{width:50px;padding:0;font-size:22px}
+.rng{width:100%;margin:12px 0 0;accent-color:var(--bg);height:28px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{appearance:none;flex:1;min-width:62px;min-height:46px;border:2px solid var(--line);background:#fff;border-radius:14px;padding:8px 6px;font-size:15px;font-weight:700;cursor:pointer;color:var(--ink)}
+.seg button.on{border-color:var(--bg);background:var(--bg);color:#fff}
+.custom{display:flex;align-items:center;gap:10px;margin-top:10px}
+.custom input{width:120px;min-height:48px;text-align:center;font-family:var(--disp);font-weight:700}
+.sum{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.sum span{background:var(--soft);border-radius:999px;padding:5px 12px;font-size:14px;font-weight:700}
+.bigcode{font-family:var(--disp);font-weight:900;font-size:clamp(40px,13vw,56px);letter-spacing:.1em;line-height:1.1;color:var(--bg);margin:4px 0 12px}
+.notice{background:var(--soft);border-radius:14px;padding:12px 14px;font-size:14px;font-weight:500;margin-top:14px}
+
+/* round */
+.rhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rhead h2{font-size:26px}
+.timer{font-family:var(--disp);font-weight:900;font-size:26px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.timer small{font-family:var(--body);font-size:13px;font-weight:700;color:var(--mut);margin-left:3px}
+.timer.low{color:var(--pd)}
+.bar{height:8px;border-radius:4px;background:var(--soft);overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--bg);width:0;border-radius:4px;transition:width .25s linear}
+.bar.low i{background:var(--p)}
+.prompt{color:var(--mut);font-size:14px;font-weight:500;margin:16px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--soft);border-radius:999px;padding:4px 12px;font-size:15px;font-weight:700}
+.chip small{color:var(--mut);font-size:12px;font-weight:500;margin-right:5px}
+.chip.m{color:#fff}.chip.m small{color:rgba(255,255,255,.85)}
+.entry{margin-top:18px}
+.entry input{font-size:22px;font-weight:700;min-height:60px}
+.entry .btn{min-height:60px}
+.sent{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#E3FBF2;border-radius:16px;padding:14px 16px;margin-top:18px}
+.sent b{font-size:24px;font-weight:900;word-break:break-all;line-height:1.2}
+.sent .mut{color:var(--ok);font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:14px;font-weight:700;color:var(--mut)}
+.prog .bar{flex:1;margin:0}.prog .bar i{background:#2EE6A6}
+
+/* results */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin-top:16px}
+.glist{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.wc{border-radius:18px;padding:12px 14px;background:var(--soft);animation:pop .4s cubic-bezier(.3,1.4,.5,1) both}
+.wc .who{font-size:12px;font-weight:700;color:var(--mut);line-height:1.45}
+.wc .w{font-size:24px;font-weight:900;word-break:break-all;line-height:1.25}
+.wc.m{color:#fff}.wc.m .who{color:rgba(255,255,255,.88)}
+.wc .w.none{font-size:15px;color:var(--mut);font-weight:700}
+.wc.mine{outline:3px solid var(--ink);outline-offset:-3px}
+.cnt{font-family:var(--disp);font-size:15px;font-weight:700;opacity:.8}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
+.winhero{text-align:center}
+.winhero .venn{--gap:20%;width:min(92%,380px)}
+.winhero .line{font-size:16px;font-weight:700;margin-top:12px}
+.acts{display:grid;gap:12px;margin-top:20px}
+.acts .btn{margin:0;width:100%}
+
+/* players */
+.players{list-style:none;padding:0;margin-top:10px}
+.players li{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid var(--soft)}
+.players li:last-child{border-bottom:0}
+.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;font-size:14px;flex:none}
+.players .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.tag2{font-size:12px;font-weight:700;border-radius:8px;padding:2px 7px;margin-left:6px;background:var(--soft);color:var(--mut)}
+.tag2.h{background:var(--y);color:var(--ink)}
+.st{font-size:13px;font-weight:700;color:var(--mut);white-space:nowrap}
+.st.ok{color:var(--ok)}
+.players.compact{display:flex;flex-wrap:wrap;gap:6px}
+.players.compact li{border:2px solid var(--soft);border-radius:999px;padding:3px 11px 3px 3px;gap:6px;font-size:14px;font-weight:700}
+.players.compact li:last-child{border-bottom:2px solid var(--soft)}
+.players.compact li.done{border-color:#2EE6A6;color:var(--ok)}
+.players.compact li.spec{opacity:.55}
+.players.compact li.pend{border-color:var(--bg);color:var(--bg)}
+.players.compact li.pick{cursor:pointer;opacity:1;border-style:dashed;border-color:var(--line)}
+.players.compact .av{width:24px;height:24px;font-size:11px}
+.hist .h{padding:10px 0;border-bottom:2px solid var(--soft)}
+.hist .h:last-child{border-bottom:0;padding-bottom:0}
+.hist .rn{font-size:13px;color:var(--mut);font-weight:700;margin-bottom:6px}
+
+/* full-screen moments: countdown and the meet */
+.fx{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4vh;background:var(--bg2);transition:opacity .28s;padding:24px}
+.fx.out{opacity:0;pointer-events:none}
+.fx{overflow:hidden}
+.fx .venn{width:min(72vw,56vh,520px)}
+.fx p{color:#fff;font-size:clamp(18px,5vw,26px);font-weight:900;letter-spacing:.2em;min-height:1.6em;text-align:center}
+.fx.cd .venn b{font-size:min(30vw,24vh,210px)}
+.fx.cd.n3 .venn{--gap:56%}
+.fx.cd.n2 .venn{--gap:37%}
+.fx.cd.n1 .venn{--gap:18%}
+.fx.cd.go .venn{--gap:0%}
+.fx.cd.go .venn b{font-size:min(17vw,13vh,110px)}
+.fx .venn b.pop{animation:num .5s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes num{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.fx.win{cursor:pointer}
+.fx.win .venn{--gap:0%}
+.fx.win .venn i{transition-duration:.75s;transition-timing-function:cubic-bezier(.5,0,.3,1.25)}
+.fx.win.pre .venn{--gap:150%}
+.fx.win .venn b{opacity:0;transform:scale(.3);font-size:min(22vw,calc(72vw / var(--n,2)),15vh,150px)}
+.fx.win p{opacity:0}
+.fx.win.hit{animation:flash .5s ease-out}
+.fx.win.hit .venn{animation:thump .5s cubic-bezier(.3,1.6,.5,1)}
+.fx.win.hit .venn b{opacity:1;transform:none;transition:transform .45s cubic-bezier(.3,1.6,.5,1),opacity .2s}
+.fx.win.hit p{opacity:1;transition:opacity .3s .2s}
+@keyframes flash{0%{background:#fff}100%{background:var(--bg2)}}
+@keyframes thump{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+#confetti{position:fixed;inset:0;width:100%;height:100%;z-index:60;pointer-events:none}
+
+/* keepsake image */
+.modal{position:fixed;inset:0;z-index:70;background:rgba(17,18,59,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal .box{background:#fff;border-radius:24px;padding:16px;width:min(100%,420px);max-height:100%;overflow:auto}
+.modal img{display:block;width:100%;border-radius:14px;background:var(--bg)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:80;background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:1}
+
+@media (min-width:900px){
+  .wrap{max-width:1060px;padding:28px 28px 80px}
+  .home{grid-template-columns:1.05fr .95fr;grid-template-areas:"hero panel" "how panel";column-gap:56px;align-items:start;padding-top:8vh}
+  .hero{text-align:left}
+  .hero .venn{margin:0;width:260px}
+  .hero h1{font-size:84px}
+  .hero .tag{font-size:20px}
+  .how{font-size:16px;margin-top:6px}
+  .panel{align-self:center}
+  .panel .card{padding:28px}
+  .room{grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+  .room aside{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding-bottom:12px}
+  #stage .card{padding:28px}
+  .rhead h2{font-size:32px}
+  .entry input{font-size:26px;min-height:68px}
+  .entry .btn{min-height:68px;padding:12px 30px}
+  .wc .w{font-size:28px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .acts{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+  .top .code b{font-size:32px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
 </style>
 </head>
 <body>
 <div id="app" class="wrap"></div>
-<div id="toast" class="toast"></div>
+<div id="fx" class="fx" hidden><div class="venn"><i class="c1"></i><i class="c2"></i><b id="fxt"></b></div><p id="fxs"></p></div>
+<canvas id="confetti"></canvas>
+<div id="modal" class="modal" hidden></div>
+<div id="toast" class="toast" role="status"></div>
 <script>
 "use strict";
 /* ---------- utils ---------- */
@@ -115,7 +247,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp
 const norm = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[\s\p{P}\p{S}]/gu, '');
 const bytes = o => new TextEncoder().encode(JSON.stringify(o)).length;
 function store(kind, k, v) { try { const st = kind === 's' ? sessionStorage : localStorage; if (v === undefined) return st.getItem(k); st.setItem(k, v); } catch (e) { return null; } }
-const COLORS = ['#ff5a3c', '#23807a', '#7b5cd6', '#e0962b', '#2f7fd1', '#d94f8c', '#4c9a2a', '#a0522d', '#0f9aa8', '#8a6d00'];
+const COLORS = ['#FF4F8B', '#3A3DF0', '#00A77A', '#F08A00', '#8A4DFF', '#0098C4', '#D63A3A', '#5B8C00', '#B0429E', '#7A5C00'];
 const colorOf = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; };
 let toastT;
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1800); }
@@ -128,10 +260,11 @@ const S = {
   peers: [], j: null, isHost: false, hg: null, g: null,
   word: '', draft: '', subKey: null, wOut: null,
   hist: {}, seenAt: {}, ht: {}, err: '', stageKey: '', histKey: '',
-  cap: 8, secs: 60, wr: 'all', connecting: false, created: false
+  cap: 8, secs: 60, wr: 'all', connecting: false, created: false, customSecs: false, cfm: 0
 };
 const MAXCAP = (window.claude && typeof window.claude.use === 'function') ? 10 : 100;
-const RES_MS = 8000; // how long the round result stays up before the next round
+const CD_MS = 3000; // 3-2-1 before the first round
+const RES_MS = 10000; // how long the round result stays up before the next round
 const BIG = 12; // above this many players, show words grouped instead of one card per person
 const byJ = (a, b) => (a.j - b.j) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 const active = () => S.peers.filter(p => p.j).sort(byJ);
@@ -164,7 +297,7 @@ function loadScript(src) {
 async function mqttTransport(code) {
   if (!window.mqtt) await loadScript('https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js');
   // v2: small per-player presence on p/<id>; host game state on its own retained topic g, sent only when it changes
-  const base = 'tongci-v2/' + code + '/p/', gTopic = 'tongci-v2/' + code + '/g', mine = base + S.id;
+  const base = 'tongci-v3/' + code + '/p/', gTopic = 'tongci-v3/' + code + '/g', mine = base + S.id;
   const c = window.mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
     clientId: 'tc_' + S.id + '_' + rid(4), clean: true, keepalive: 30, reconnectPeriod: 2000, connectTimeout: 8000,
     will: { topic: mine, payload: '', retain: true, qos: 0 }
@@ -245,7 +378,7 @@ function pushMe() {
 }
 
 /* ---------- game state (host-authoritative, lives in host presence) ---------- */
-function newG(cap, secs, wr) { return { v: 2, cap, secs, wr: wr || 'all', ph: 'lobby', seats: [], pend: [], nm: {}, gid: 0, r: 0, k: '', hist: [] }; }
+function newG(cap, secs, wr) { return { v: 3, cap, secs, wr: wr || 'all', ph: 'lobby', seats: [], pend: [], nm: {}, gid: 0, r: 0, k: '', hist: [] }; }
 
 function fitG(g) {
   if (g.hist.length > 2) g.hist = g.hist.slice(-2); // players keep the full history locally; the wire only carries the last rounds
@@ -274,7 +407,10 @@ function hostTick() {
   const pend = g.pend.filter(id => by[id] && !g.seats.includes(id));
   if (pend.length !== g.pend.length) { g.pend = pend; ch = true; }
   for (const id of g.seats.concat(g.pend)) { const n = by[id] && by[id].n; if (n && g.nm[id] !== n) { g.nm[id] = n; ch = true; } }
-  if (g.ph === 'in') {
+  if (g.ph === 'cd') {
+    if (t.k !== 'cd' + g.k) { t.k = 'cd' + g.k; t.cd = now; }
+    if (now - t.cd >= CD_MS) { g.ph = 'in'; S.ht = {}; ch = true; }
+  } else if (g.ph === 'in') {
     if (t.k !== g.k) { t.k = g.k; t.dl = g.secs ? now + g.secs * 1000 + 900 : 0; }
     const all = g.seats.every(id => by[id] && by[id].d === g.k);
     if (all || (t.dl && now > t.dl)) { g.ph = 'rv'; t.rv = now; ch = true; }
@@ -312,7 +448,7 @@ function startGame() {
   const extra = (g.pend || []).filter(id => ids.includes(id) && !g.seats.includes(id));
   if (extra.length) { g.seats = g.seats.concat(extra); g.cap = Math.min(MAXCAP, Math.max(g.cap, g.seats.length)); }
   if (g.seats.length < 2) { toast('至少要 2 人才能開始'); return; }
-  g.gid = (g.gid || 0) + 1; g.r = 1; g.k = g.gid + '.1'; g.hist = []; g.pend = []; g.ph = 'in'; S.ht = {};
+  g.gid = (g.gid || 0) + 1; g.r = 1; g.k = g.gid + '.1'; g.hist = []; g.pend = []; g.ph = 'cd'; S.ht = {};
   fitG(g); pushMe(); render();
 }
 function toLobby() { const g = S.hg; if (!g) return; g.ph = 'lobby'; g.hist = []; g.pend = []; S.ht = {}; fitG(g); pushMe(); render(); }
@@ -337,6 +473,7 @@ function sync() {
     if (old && (old.win !== h.win || old.hd !== h.hd)) { S.hist[key] = Object.assign({}, old, { win: h.win, hd: h.hd }); }
     if (!S.hist[key]) { const nm = {}; Object.keys(h.w).forEach(id => nm[id] = (g.nm && g.nm[id]) || nameOf(id)); S.hist[key] = Object.assign({}, h, { nm }); }
   }
+  if (g.ph === 'cd' && !S.seenAt['cd' + g.k]) S.seenAt['cd' + g.k] = Date.now();
   if (g.ph === 'in' && !S.seenAt[g.k]) S.seenAt[g.k] = Date.now();
   if (g.ph === 'rv' || g.ph === 'res' || g.ph === 'win') {
     const seated = (g.seats || []).includes(S.id);
@@ -401,10 +538,16 @@ function submitWord() {
   S.word = v; S.subKey = g.k; S.wOut = null; S.draft = ''; pushMe(); render();
 }
 function unsubmit() { const g = S.g; if (!g || g.ph !== 'in' || S.subKey !== g.k) return; S.draft = S.word; S.draftKey = g.k; S.subKey = null; pushMe(); render(); setTimeout(() => { const el = document.getElementById('word'); if (el) el.focus(); }, 0); }
-function declareWin() {
-  const g = S.hg; if (!S.isHost || !g || g.ph !== 'res') return;
-  const e = g.hist[g.hist.length - 1]; if (!e || e.g !== g.gid || e.r !== g.r) return;
-  e.win = 1; e.hd = 1; g.ph = 'win'; S.ht = {};
+function declareWin() { // host rules that the words mean the same: this round, or (from the next round's input screen) the previous one
+  const g = S.hg; if (!S.isHost || !g) return;
+  if (g.ph === 'res') {
+    const e = g.hist[g.hist.length - 1]; if (!e || e.g !== g.gid || e.r !== g.r) return;
+    e.win = 1; e.hd = 1;
+  } else if (g.ph === 'in' && g.r > 1) {
+    const e = g.hist.find(h => h.g === g.gid && h.r === g.r - 1); if (!e) return;
+    e.win = 1; e.hd = 1; g.r--; g.k = g.gid + '.' + g.r;
+  } else return;
+  g.ph = 'win'; S.ht = {};
   fitG(g); pushMe(); render();
 }
 function togglePend(id) {
@@ -426,72 +569,69 @@ function copyCode() {
 
 /* ---------- render ---------- */
 const app = document.getElementById('app');
-function render() { if (S.view === 'home') renderHome(); else renderRoom(); }
+const PRESETS = [30, 60, 90];
+const reduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+function render() { if (S.view === 'home') renderHome(); else renderRoom(); updateFx(); }
 
 function renderHome() {
   const hashCode = (location.hash.match(/^#r-([a-z0-9]{4,6})$/) || [])[1] || '';
   const prevCode = document.getElementById('code'); const codeVal = prevCode ? prevCode.value : hashCode;
   const prevName = document.getElementById('name'); const nameVal = prevName ? prevName.value : S.name;
   S.stageKey = '';
+  app.className = 'wrap home';
+  const joinRow = `<div class="row"><input type="text" id="code" maxlength="6" placeholder="房間碼" aria-label="房間碼" value="${esc(codeVal)}" autocapitalize="off" autocomplete="off" spellcheck="false">
+      <button class="btn ${hashCode ? 'primary' : ''}" data-a="join" ${S.connecting ? 'disabled' : ''}>${S.connecting && hashCode ? '連線中…' : '加入'}</button></div>`;
   app.innerHTML = `
-  <div class="hero">
-    <div class="logo"><span class="l1">詞</span><span class="l2">詞</span></div>
+  <section class="hero">
+    <div class="venn" aria-hidden="true"><i class="c1"></i><i class="c2"></i></div>
     <h1>同詞相遇</h1>
-    <p>大家同時寫下一個詞，直到所有人寫出同一個詞</p>
-  </div>
-  <div class="card">
+    <p class="tag">所有人同時寫一個詞，<br>寫到大家都一樣為止。</p>
+  </section>
+  <section class="panel"><div class="card">
     <label for="name">你的暱稱</label>
-    <input type="text" id="name" maxlength="12" placeholder="輸入暱稱" value="${esc(nameVal)}" autocomplete="off">
-  </div>
-  ${hashCode ? '' : `
-  <div class="card">
-    <h2>建立房間</h2>
-    <label>人數上限</label>
-    <div class="stepper"><button class="btn ghost" data-a="cap-">－</button><b id="capv">${S.cap}</b><button class="btn ghost" data-a="cap+">＋</button><span class="mut">人（2–${MAXCAP}）</span></div>
-    <input type="range" class="rng" id="capr" min="2" max="${MAXCAP}" value="${S.cap}">
-    <label>每輪思考時間</label>
-    <div class="seg">${[[0,'不限'],[30,'30 秒'],[60,'60 秒'],[90,'90 秒']].map(([v,l]) => `<button data-a="secs" data-v="${v}" class="${S.secs===v?'on':''}">${l}</button>`).join('')}</div>
-    <button class="btn primary block" data-a="create" ${S.connecting?'disabled':''}>${S.connecting?'連線中…':'建立房間'}</button>
-  </div>`}
-  <div class="card">
-    <h2>加入房間</h2>
-    <div class="row"><input type="text" id="code" maxlength="6" placeholder="房間碼" value="${esc(codeVal)}" autocapitalize="off" autocomplete="off" spellcheck="false">
-    <button class="btn ${hashCode?'primary':''}" data-a="join" ${S.connecting?'disabled':''}>${S.connecting&&hashCode?'連線中…':'加入'}</button></div>
-    ${hashCode ? `<p class="mut" style="margin-top:8px">輸入暱稱後按加入。<a href="#" data-a="clearhash">改成自己建立房間</a></p>` : ''}
-  </div>
-  ${S.err ? `<p class="err">${esc(S.err)}</p>` : ''}
-  <details class="rules"><summary>怎麼玩</summary>
-    <ol><li>每輪所有人同時輸入一個詞，全部送出（或時間到）後一起揭曉。</li>
-    <li>如果所有人的詞完全一樣，就成功「相遇」，遊戲結束。</li>
-    <li>沒對上的話，看看上一輪大家寫了什麼，想一個所有人都會聯想到的詞，進入下一輪。</li>
-    <li>不能用講的、不能互相指定，只能靠默契。</li></ol>
-    <p>房主可以在大廳調整人數上限（2–10）與每輪時間；超過上限的人會變成觀戰。</p>
-  </details>`;
+    <input type="text" id="name" maxlength="12" placeholder="大家會看到這個名字" value="${esc(nameVal)}" autocomplete="off">
+    ${hashCode ? `
+      <div class="set"><label for="code">朋友邀請你加入這個房間</label>${joinRow}</div>
+      <button class="linkbtn" data-a="clearhash">不加入，改成自己開新房間</button>` : `
+      <button class="btn primary block" data-a="create" ${S.connecting ? 'disabled' : ''}>${S.connecting ? '連線中…' : '開新房間'}</button>
+      <div class="or">或是輸入朋友給的房間碼</div>
+      ${joinRow}`}
+    ${S.err ? `<p class="err">${esc(S.err)}</p>` : ''}
+  </div></section>
+  <ol class="how">
+    <li>每一輪，所有人同時寫下一個詞，寫完一起揭曉。</li>
+    <li>看看大家寫了什麼，下一輪往彼此的中間靠。</li>
+    <li>所有人寫出同一個詞，就相遇了。</li>
+    <li class="note">不能討論、不能暗示，只能靠默契。人數、時間和過關條件，進房間後由房主設定。</li>
+  </ol>`;
 }
 
 function renderTop() {
   const el = document.getElementById('top'); if (!el || S.view !== 'room') return;
-  const g = S.g, n = g ? g.seats.length : 0;
-  el.innerHTML = `<div class="code">房間碼<b>${esc(S.code)}</b></div>
-    <button class="btn small ghost" data-a="copy">${S.mode === 'mqtt' ? '複製邀請連結' : '複製房間碼'}</button>
-    <div class="sp"></div>
-    <span class="st"><span class="dot ${S.conn ? 'on' : ''}"></span>${S.conn ? '已連線' : '連線中'}</span>
-    <button class="btn small ghost" data-a="leave">離開</button>`;
+  el.innerHTML = `<div class="code"><span>房間碼</span><b>${esc(S.code)}</b></div>
+    <button class="pill" data-a="copy">${S.mode === 'mqtt' ? '複製邀請連結' : '複製房間碼'}</button>
+    <span class="sp"></span>
+    <span class="conn"><span class="dot ${S.conn ? 'on' : ''}"></span>${S.conn ? '已連線' : '連線中'}</span>
+    <button class="pill" data-a="leave">離開</button>`;
 }
 
+const customOn = g => S.customSecs || (g.secs && !PRESETS.includes(g.secs));
 function stageKeyOf() {
   const g = S.g;
   if (!g) return 'wait';
   const seated = g.seats.includes(S.id);
-  if (g.ph === 'lobby') return ['lobby', S.isHost, g.cap, g.secs, g.wr, g.seats.length, seated, Math.max(0, active().length - g.cap)].join('|');
+  if (g.ph === 'lobby') return ['lobby', S.isHost, g.cap, g.secs, g.wr, g.seats.length, seated, Math.max(0, active().length - g.cap), customOn(g)].join('|');
+  if (g.ph === 'cd') return 'cd|' + g.k;
   if (g.ph === 'in') return ['in', g.k, S.subKey === g.k, seated, S.isHost, (g.pend || []).includes(S.id)].join('|');
   if (g.ph === 'rv') return 'rv|' + g.k;
-  return [g.ph, g.k, S.isHost, (g.hist || []).length].join('|');
+  const e = entryFor(g.gid, g.r);
+  return [g.ph, g.k, S.isHost, e ? 1 : 0, e && e.hd ? 1 : 0].join('|');
 }
 
 function renderRoom() {
   if (!document.getElementById('top')) {
-    app.innerHTML = `<div class="top" id="top"></div><div id="stage"></div><div class="card"><h2 id="ptitle">玩家</h2><ul class="players" id="players"></ul></div><div id="hist"></div>`;
+    app.className = 'wrap';
+    app.innerHTML = `<header class="top" id="top"></header><div class="room"><main id="stage"></main><aside><div class="card"><h2 id="ptitle">玩家</h2><ul class="players" id="players"></ul></div><div id="hist"></div></aside></div>`;
     S.stageKey = ''; S.histKey = '';
   }
   renderTop();
@@ -501,7 +641,12 @@ function renderRoom() {
     if (prevInput && S.g && S.g.ph === 'in') { S.draft = prevInput.value; S.draftKey = S.g.k; }
     S.stageKey = key; document.getElementById('stage').innerHTML = stageHTML();
     const w = document.getElementById('word');
-    if (w) { w.value = S.draftKey === (S.g && S.g.k) ? S.draft : ''; w.addEventListener('input', () => { S.draft = w.value; S.draftKey = S.g && S.g.k; }); w.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); submitWord(); } }); }
+    if (w) {
+      w.value = S.draftKey === (S.g && S.g.k) ? S.draft : '';
+      w.addEventListener('input', () => { S.draft = w.value; S.draftKey = S.g && S.g.k; });
+      w.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); submitWord(); } });
+      try { if (matchMedia('(hover: hover) and (pointer: fine)').matches) w.focus({ preventScroll: true }); } catch (e) {}
+    }
   }
   renderStatus();
   renderPlayers();
@@ -528,71 +673,98 @@ function wordChips(entry, matchColors) {
   if (!entry) return '';
   if (Object.keys(entry.w).length > BIG) {
     const { list, empty } = groups(entry);
-    return `<div class="chips">${list.map(gp => { const c = matchColors && matchColors[gp.k]; return `<span class="chip ${c ? 'm' : ''}" ${c ? `style="background:${c}"` : ''}>${esc(gp.word)} <small style="${c ? 'color:rgba(255,255,255,.85)' : ''}">×${gp.ids.length}</small></span>`; }).join('')}${empty.length ? `<span class="chip"><span class="mut">沒寫 ×${empty.length}</span></span>` : ''}</div>`;
+    return `<div class="chips">${list.map(gp => { const c = matchColors && matchColors[gp.k]; return `<span class="chip ${c ? 'm' : ''}" ${c ? `style="background:${c}"` : ''}>${esc(gp.word)} <small>×${gp.ids.length}</small></span>`; }).join('')}${empty.length ? `<span class="chip"><small>沒寫 ×${empty.length}</small></span>` : ''}</div>`;
   }
   return `<div class="chips">${Object.keys(entry.w).map(id => {
     const w = entry.w[id], c = matchColors && matchColors[norm(w)];
-    return `<span class="chip ${c ? 'm' : ''}" ${c ? `style="background:${c}"` : ''}><small style="${c ? 'color:rgba(255,255,255,.85)' : ''}">${esc((entry.nm && entry.nm[id]) || nameOf(id))}</small>${w ? esc(w) : '<span class="mut">（沒寫）</span>'}</span>`;
+    return `<span class="chip ${c ? 'm' : ''}" ${c ? `style="background:${c}"` : ''}><small>${esc((entry.nm && entry.nm[id]) || nameOf(id))}</small>${w ? esc(w) : '<small>（沒寫）</small>'}</span>`;
   }).join('')}</div>`;
 }
 function groupColors(entry) {
   const cnt = {}; Object.values(entry.w).forEach(w => { const n = norm(w); if (n) cnt[n] = (cnt[n] || 0) + 1; });
-  const out = {}; let i = 0; Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).forEach(n => { if (cnt[n] >= 2) out[n] = COLORS[i++ % COLORS.length]; });
-  return { colors: out, max: Math.max(0, ...Object.values(cnt)), top: Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] };
+  const order = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+  const out = {}; let i = 0; order.forEach(n => { if (cnt[n] >= 2) out[n] = COLORS[i++ % COLORS.length]; });
+  return { colors: out, max: Math.max(0, ...Object.values(cnt)), top: order[0] };
 }
 function entryFor(gid, r) { return S.hist[gid + '.' + r] || ((S.g && S.g.hist) || []).find(h => h.g === gid && h.r === r); }
+const secsLabel = s => s ? `每輪 ${s} 秒` : '不限時';
+const ruleLabel = wr => wr === 'maj' ? '過半數寫一樣就過關' : '全員寫一樣才過關';
+const vlen = s => [...String(s)].reduce((n, c) => n + (c.charCodeAt(0) > 0x2e7f ? 1 : 0.58), 0);
+function winWord(e) {
+  const gl = groups(e).list;
+  if (!e.hd) return (gl[0] || {}).word || '';
+  return gl.slice(0, 3).map(x => x.word).join('／') + (gl.length > 3 ? '…' : '');
+}
+
+function settingsHTML(g) {
+  const cu = customOn(g);
+  return `
+    <div class="set"><div class="lab">人數上限</div>
+      <div class="stepper"><button class="btn" data-a="hcap-" aria-label="減少">－</button><b>${g.cap}</b><button class="btn" data-a="hcap+" aria-label="增加">＋</button><span class="mut">人，最多 ${MAXCAP}</span></div>
+      <input type="range" class="rng" id="hcapr" min="2" max="${MAXCAP}" value="${g.cap}" aria-label="人數上限"></div>
+    <div class="set"><div class="lab">每輪思考時間</div>
+      <div class="seg">${[[0, '不限'], [30, '30 秒'], [60, '60 秒'], [90, '90 秒']].map(([v, l]) => `<button data-a="hsecs" data-v="${v}" class="${!cu && g.secs === v ? 'on' : ''}">${l}</button>`).join('')}<button data-a="hcustom" class="${cu ? 'on' : ''}">自訂</button></div>
+      ${cu ? `<div class="custom"><input type="number" id="csecs" min="5" max="600" step="1" inputmode="numeric" value="${g.secs || 45}" aria-label="自訂秒數"><span class="mut">秒，可設 5 到 600</span></div>` : ''}</div>
+    <div class="set"><div class="lab">過關條件</div>
+      <div class="seg">${[['all', '全員寫一樣'], ['maj', '過半數寫一樣']].map(([v, l]) => `<button data-a="hwr" data-v="${v}" class="${(g.wr || 'all') === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`;
+}
 
 function stageHTML() {
   const g = S.g;
   if (!g) return `<div class="card center"><p class="mut">正在同步房間狀態…</p></div>`;
   const seated = g.seats.includes(S.id);
   if (g.ph === 'lobby') {
-    const hostCtl = S.isHost ? `
-      <label>人數上限</label>
-      <div class="stepper"><button class="btn ghost" data-a="hcap-">－</button><b>${g.cap}</b><button class="btn ghost" data-a="hcap+">＋</button><span class="mut">人（2–${MAXCAP}）</span></div>
-      <input type="range" class="rng" id="hcapr" min="2" max="${MAXCAP}" value="${g.cap}">
-      <label>每輪思考時間</label>
-      <div class="seg">${[[0,'不限'],[30,'30 秒'],[60,'60 秒'],[90,'90 秒']].map(([v,l]) => `<button data-a="hsecs" data-v="${v}" class="${g.secs===v?'on':''}">${l}</button>`).join('')}</div>
-      <label>勝利條件</label>
-      <div class="seg">${[['all','全員寫一樣'],['maj','過半數寫一樣']].map(([v,l]) => `<button data-a="hwr" data-v="${v}" class="${(g.wr||'all')===v?'on':''}">${l}</button>`).join('')}</div>
-      ${active().length > g.cap ? `<p class="mut" style="margin-top:10px">有 ${active().length - g.cap} 人超過上限在觀戰，調高人數上限就能讓他們入座。</p>` : ''}
-      <button class="btn accent block" data-a="start" ${g.seats.length < 2 ? 'disabled' : ''}>${g.seats.length < 2 ? '等待其他玩家加入…' : `開始遊戲（${g.seats.length} 人）`}</button>` :
-      `<p class="mut" style="margin-top:8px">人數上限 ${g.cap} 人・每輪 ${g.secs ? g.secs + ' 秒' : '不限時'}・${g.wr === 'maj' ? '過半數寫一樣就過關' : '全員寫一樣才過關'}</p><p style="margin-top:10px;font-weight:700">${seated ? '等待房主開始遊戲…' : '房間已滿，你目前是觀戰，下一場有空位會自動入座'}</p>`;
-    return `<div class="card"><h2>大廳</h2><p class="mut">把房間碼 <b style="color:var(--ink)">${esc(S.code)}</b> 給朋友${S.mode === 'room' ? '（他們打開同一個頁面後輸入）' : '，或直接傳邀請連結'}。</p>${hostCtl}</div>`;
+    const over = active().length - g.cap;
+    const share = `<p class="mut">${S.mode === 'room' ? '把房間碼給朋友，他們打開同一個頁面後輸入' : '把房間碼或邀請連結傳給朋友'}</p><div class="bigcode">${esc(S.code)}</div>
+      <button class="btn small" data-a="copy">${S.mode === 'mqtt' ? '複製邀請連結' : '複製房間碼'}</button>`;
+    if (S.isHost) return `<div class="card"><h2>等大家到齊</h2>${share}${settingsHTML(g)}
+      ${over > 0 ? `<p class="notice">有 ${over} 人超過上限、正在觀戰。調高人數上限，他們就會入座。</p>` : ''}
+      <button class="btn primary block" data-a="start" ${g.seats.length < 2 ? 'disabled' : ''}>${g.seats.length < 2 ? '至少要 2 人才能開始' : `開始遊戲，共 ${g.seats.length} 人`}</button></div>`;
+    return `<div class="card"><h2>${seated ? '等房主開始遊戲' : '房間滿了，你先觀戰'}</h2>${share}
+      <div class="sum"><span>上限 ${g.cap} 人</span><span>${secsLabel(g.secs)}</span><span>${ruleLabel(g.wr)}</span></div>
+      ${seated ? '' : '<p class="notice">有空位或房主調高上限時，你會自動入座。</p>'}</div>`;
   }
+  if (g.ph === 'cd') return `<div class="card center"><h2>準備開始</h2><p class="mut" style="margin-top:6px">想一個詞，什麼都可以</p></div>`;
   if (g.ph === 'in') {
     const prev = g.r > 1 ? entryFor(g.gid, g.r - 1) : null;
     const pc = prev ? groupColors(prev).colors : null;
     const sub = S.subKey === g.k;
     let body;
-    if (!seated) body = (g.pend || []).includes(S.id) ? `<div class="sent"><div><b style="font-size:17px">房主讓你下一輪加入！</b><div class="mut">先看看大家寫什麼，準備好</div></div></div>` : `<p class="mut">你在觀戰中。房主可以讓你從下一輪加入。</p>`;
-    else if (sub) body = `<div class="sent"><div><div class="mut">你寫了</div><b>${esc(S.word)}</b></div><button class="btn small ghost" data-a="unsub">修改</button></div><p class="mut" style="margin-top:8px">等其他人送出…</p>`;
-    else body = `<div class="row"><input type="text" id="word" maxlength="16" placeholder="${g.r === 1 ? '隨便想一個詞' : '想一個大家都會寫的詞'}" autocomplete="off" enterkeyhint="send"><button class="btn primary" data-a="submit">送出</button></div>`;
+    if (!seated) body = (g.pend || []).includes(S.id) ? `<div class="sent"><div><div class="mut">房主讓你下一輪加入</div><b style="font-size:18px">先看看大家寫什麼</b></div></div>` : `<p class="notice">你正在觀戰。房主可以讓你從下一輪加入。</p>`;
+    else if (sub) body = `<div class="sent"><div><div class="mut">已送出，等其他人</div><b>${esc(S.word)}</b></div><button class="btn small" data-a="unsub">修改</button></div>`;
+    else body = `<div class="row entry"><input type="text" id="word" maxlength="16" placeholder="${g.r === 1 ? '隨便寫一個詞' : '大家都會寫的那個詞'}" aria-label="你的詞" autocomplete="off" enterkeyhint="send"><button class="btn primary" data-a="submit">送出</button></div>`;
     return `<div class="card">
-      <div class="round"><h2>第 ${g.r} 輪</h2><span class="timer" id="timer"></span></div>
-      ${prev ? `<p class="prompt">上一輪大家寫了：</p>${wordChips(prev, pc)}<p class="prompt">找出大家都會聯想到的那個詞</p>` : `<p class="prompt">第一輪：每個人隨便寫一個詞，什麼都可以</p>`}
+      <div class="rhead"><h2>第 ${g.r} 輪</h2><div class="timer" id="timer"></div></div>
+      ${g.secs ? '<div class="bar" id="tbarw"><i id="tbar"></i></div>' : ''}
+      ${prev ? `<p class="prompt">上一輪大家寫了這些，往中間靠</p>${wordChips(prev, pc)}` : `<p class="prompt">第一輪沒有線索，想到什麼寫什麼</p>`}
       ${body}
-      ${g.secs ? '<div class="bar"><i id="tbar"></i></div>' : ''}
-      <p class="mut" id="substat" style="margin-top:10px"></p>
+      <div class="prog"><span id="substat"></span><div class="bar"><i id="pbar"></i></div></div>
+      ${S.isHost && prev ? `<button class="linkbtn" data-a="declare-prev">上一輪其實意思一樣？宣布全員通關</button>` : ''}
     </div>`;
   }
-  if (g.ph === 'rv') return `<div class="card center"><div class="round" style="justify-content:center"><h2>第 ${g.r} 輪・揭曉中…</h2></div><p class="mut" style="margin-top:6px">收集大家的詞</p></div>`;
+  if (g.ph === 'rv') return `<div class="card center"><h2>第 ${g.r} 輪揭曉中</h2><p class="mut" style="margin-top:6px">正在收大家的詞</p></div>`;
   const e = entryFor(g.gid, g.r);
   if (!e) return `<div class="card center"><p class="mut">揭曉中…</p></div>`;
   const gc = groupColors(e), n = Object.keys(e.w).length, winKey = g.ph === 'win' ? (e.hd ? '*' : gc.top) : null;
-  const cards = n > BIG ? groupCards(e, winKey, gc.colors) : `<div class="grid">${Object.keys(e.w).map((id, i) => { const w = e.w[id], c = winKey ? ((winKey === '*' ? !!norm(w) : norm(w) === winKey) ? COLORS[0] : '') : gc.colors[norm(w)]; return `<div class="wc ${c ? 'm' : ''}" style="animation-delay:${i * 70}ms;${c ? 'background:' + c : ''}"><div class="who">${esc((e.nm && e.nm[id]) || nameOf(id))}${id === S.id ? '（你）' : ''}</div><div class="w ${w ? '' : 'none'}">${w ? esc(w) : '沒寫'}</div></div>`; }).join('')}</div>`;
+  const cards = n > BIG ? groupCards(e, winKey, gc.colors) : `<div class="grid">${Object.keys(e.w).map((id, i) => {
+    const w = e.w[id], c = winKey ? ((winKey === '*' ? !!norm(w) : norm(w) === winKey) ? COLORS[0] : '') : gc.colors[norm(w)];
+    return `<div class="wc ${c ? 'm' : ''} ${id === S.id ? 'mine' : ''}" style="animation-delay:${i * 60}ms;${c ? 'background:' + c : ''}"><div class="who">${esc((e.nm && e.nm[id]) || nameOf(id))}${id === S.id ? '（你）' : ''}</div><div class="w ${w ? '' : 'none'}">${w ? esc(w) : '沒寫'}</div></div>`;
+  }).join('')}</div>`;
   if (g.ph === 'win') {
-    const gl = groups(e).list;
-    const word = e.hd ? gl.slice(0, 4).map(x => x.word).join(' ／ ') + (gl.length > 4 ? ' …' : '') : ((gl[0] || {}).word || '');
-    const line = e.hd ? `房主宣布：意思一樣，第 ${g.r} 輪全員通關` : `${gc.max === n ? n + ' 個人' : gc.max + ' / ' + n + ' 人'}在第 ${g.r} 輪相遇了`;
-    return `<div class="card"><div class="win"><div class="em">🎉</div><div class="mut">${line}</div><div class="big" style="${e.hd && gl.length > 1 ? 'font-size:30px' : ''}">${esc(word)}</div></div>${cards}
-      ${S.isHost ? `<button class="btn accent block" data-a="again">再玩一次</button><button class="btn ghost block" style="margin-top:8px" data-a="lobby">回大廳（改人數／時間）</button>` : `<p class="mut center" style="margin-top:12px">等房主開下一場…</p>`}</div>`;
+    const word = winWord(e), len = Math.max(2, vlen(word));
+    const line = e.hd ? `房主宣布意思一樣，第 ${g.r} 輪全員通關` : `${gc.max === n ? n + ' 個人' : gc.max + ' / ' + n + ' 人'}在第 ${g.r} 輪相遇了`;
+    return `<div class="card"><div class="winhero"><div class="venn"><i class="c1"></i><i class="c2"></i><b style="font-size:min(${(62 / len).toFixed(1)}vw,${Math.round(300 / len)}px,84px)">${esc(word)}</b></div><p class="line">${line}</p></div>
+      ${cards}
+      <div class="acts">${S.isHost ? `<button class="btn primary" data-a="again">再玩一次</button>` : ''}<button class="btn pink" data-a="card">下載紀念圖</button>${S.isHost ? `<button class="btn" data-a="lobby">回大廳改設定</button>` : ''}</div>
+      ${S.isHost ? '' : `<p class="mut center" style="margin-top:14px">等房主開下一場</p>`}</div>`;
   }
   const need = g.wr === 'maj' ? Math.floor(n / 2) + 1 : n;
-  const summary = gc.max >= 2 ? `最多 ${gc.max} / ${n} 人想到同一個詞（要 ${need} 人才過關）` : '大家都寫得不一樣';
-  return `<div class="card"><div class="round"><h2>第 ${g.r} 輪結果</h2></div><p class="prompt" style="margin-top:6px">${summary}</p>${cards}
-    <div class="bar"><i id="nbar"></i></div><p class="mut" style="margin-top:8px">下一輪即將開始…</p>
-    ${S.isHost ? `<button class="btn accent block" data-a="declare">意思一樣，宣布全員通關</button><button class="btn ghost block" style="margin-top:8px" data-a="next">直接下一輪</button>` : ''}</div>`;
+  const summary = gc.max >= 2 ? `最多 ${gc.max} / ${n} 人寫了同一個詞，要 ${need} 人才過關` : '這一輪大家寫的都不一樣';
+  return `<div class="card"><div class="rhead"><h2>第 ${g.r} 輪結果</h2><div class="timer" id="ntimer"></div></div>
+    <div class="bar"><i id="nbar"></i></div>
+    <p class="prompt">${summary}</p>${cards}
+    ${S.isHost ? `<div class="acts"><button class="btn pink" data-a="declare">意思一樣，宣布全員通關</button><button class="btn" data-a="next">直接下一輪</button></div>`
+      : `<p class="mut" style="margin-top:16px">如果大家寫的意思一樣，房主可以直接宣布通關。</p>`}</div>`;
 }
 
 function renderStatus() {
@@ -600,6 +772,7 @@ function renderStatus() {
   const by = Object.fromEntries(S.peers.map(p => [p.id, p]));
   const done = g.seats.filter(id => by[id] && by[id].d === g.k).length;
   el.textContent = `已送出 ${done} / ${g.seats.length}`;
+  const b = document.getElementById('pbar'); if (b) b.style.width = (g.seats.length ? 100 * done / g.seats.length : 0) + '%';
 }
 
 function renderPlayers() {
@@ -610,11 +783,12 @@ function renderPlayers() {
   document.getElementById('ptitle').textContent = g ? `玩家 ${seats.length} / ${g.cap}` : '玩家';
   const big = act.length + joining.length > BIG;
   el.classList.toggle('compact', big);
+  const playing = g && g.ph !== 'lobby';
   if (big) {
     el.innerHTML = act.map(p => {
       const seated = seats.includes(p.id), done = g && g.ph === 'in' && p.d === g.k;
-      const pd = !seated && g && (g.pend || []).includes(p.id), canPick = !seated && S.isHost && g && g.ph !== 'lobby';
-      return `<li class="${seated ? '' : (pd ? 'pend' : 'spec')} ${done ? 'done' : ''} ${canPick ? 'pick' : ''}" ${canPick ? `data-a="pend" data-id="${esc(p.id)}"` : ''} title="${seated ? '' : (pd ? '下輪加入' : '觀戰')}"><span class="av" style="background:${colorOf(p.id)}">${esc((p.n || '?').slice(0, 1))}</span>${esc(p.n || '？')}${p.id === hostId ? ' ★' : ''}${p.id === S.id ? '（你）' : ''}${done ? ' ✓' : ''}${pd ? ' ↪下輪' : (canPick ? ' ＋' : '')}</li>`;
+      const pd = !seated && g && (g.pend || []).includes(p.id), canPick = !seated && S.isHost && playing;
+      return `<li class="${seated ? '' : (pd ? 'pend' : 'spec')} ${done ? 'done' : ''} ${canPick ? 'pick' : ''}" ${canPick ? `data-a="pend" data-id="${esc(p.id)}" role="button" tabindex="0"` : ''} title="${seated ? '' : (pd ? '下輪加入' : '觀戰')}"><span class="av" style="background:${colorOf(p.id)}">${esc((p.n || '?').slice(0, 1))}</span>${esc(p.n || '？')}${p.id === hostId ? ' ★' : ''}${p.id === S.id ? '（你）' : ''}${done ? ' ✓' : ''}${pd ? ' ↪下輪' : (canPick ? ' ＋' : '')}</li>`;
     }).concat(joining.map(p => `<li class="spec">${esc(p.n || '？')}…</li>`)).join('');
     return;
   }
@@ -624,14 +798,13 @@ function renderPlayers() {
     if (!g) st = '';
     else if (!seated) {
       const pd = (g.pend || []).includes(p.id);
-      st = (S.isHost && g.ph !== 'lobby') ? `<button class="btn small ${pd ? 'ghost' : 'primary'}" data-a="pend" data-id="${esc(p.id)}">${pd ? '取消' : '下輪加入'}</button>`
-         : `<span class="st">${pd ? '下輪加入' : '觀戰'}</span>`;
-      if (pd && S.isHost && g.ph !== 'lobby') st = '<span class="st ok" style="margin-right:6px">下輪加入</span>' + st;
+      if (S.isHost && playing) st = (pd ? '<span class="st ok" style="margin-right:6px">下輪加入</span>' : '') + `<button class="btn small ${pd ? '' : 'primary'}" data-a="pend" data-id="${esc(p.id)}">${pd ? '取消' : '下輪加入'}</button>`;
+      else st = `<span class="st ${pd ? 'ok' : ''}">${pd ? '下輪加入' : '觀戰'}</span>`;
     }
     else if (g.ph === 'in') st = p.d === g.k ? '<span class="st ok">已送出 ✓</span>' : '<span class="st">思考中…</span>';
     else if (g.ph === 'lobby') st = '<span class="st ok">已入座</span>';
-    return `<li><span class="av" style="background:${colorOf(p.id)}">${esc((p.n || '?').slice(0, 1))}</span><span class="nm">${esc(p.n || '？')}${p.id === hostId ? '<span class="tag h">房主</span>' : ''}${p.id === S.id ? '<span class="tag">你</span>' : ''}</span>${st}</li>`;
-  }).concat(joining.map(p => `<li><span class="av" style="background:#bbb">${esc((p.n || '?').slice(0, 1))}</span><span class="nm">${esc(p.n || '？')}${p.id === S.id ? '<span class="tag">你</span>' : ''}</span><span class="st">加入中…</span></li>`));
+    return `<li><span class="av" style="background:${colorOf(p.id)}">${esc((p.n || '?').slice(0, 1))}</span><span class="nm">${esc(p.n || '？')}${p.id === hostId ? '<span class="tag2 h">房主</span>' : ''}${p.id === S.id ? '<span class="tag2">你</span>' : ''}</span>${st}</li>`;
+  }).concat(joining.map(p => `<li><span class="av" style="background:#B9BBDD">${esc((p.n || '?').slice(0, 1))}</span><span class="nm">${esc(p.n || '？')}${p.id === S.id ? '<span class="tag2">你</span>' : ''}</span><span class="st">加入中…</span></li>`));
   el.innerHTML = rows.join('') || '<li class="mut">連線中…</li>';
 }
 
@@ -641,55 +814,215 @@ function renderHist() {
   const list = Object.values(S.hist).filter(h => h.g === g.gid).sort((a, b) => b.r - a.r);
   const key = g.gid + ':' + list.map(h => h.r + (h.win ? (h.hd ? 'd' : 'w') : '')).join(',');
   if (key === S.histKey) return; S.histKey = key;
-  el.innerHTML = list.length ? `<div class="card hist"><h2>歷史紀錄</h2>${list.map(h => `<div class="h"><div class="rn">第 ${h.r} 輪${h.win ? (h.hd ? '・房主判定通關 🎉' : '・相遇 🎉') : ''}</div>${wordChips(h, groupColors(h).colors)}</div>`).join('')}</div>` : '';
+  el.innerHTML = list.length ? `<div class="card hist"><h2>每一輪寫了什麼</h2>${list.map(h => `<div class="h"><div class="rn">第 ${h.r} 輪${h.win ? (h.hd ? '，房主判定通關' : '，相遇') : ''}</div>${wordChips(h, groupColors(h).colors)}</div>`).join('')}</div>` : '';
 }
 
 function tickUI() {
   const g = S.g; if (!g || S.view !== 'room') return;
-  if (g.ph === 'in' && g.secs) {
-    const start = S.seenAt[g.k] || Date.now(), left = Math.max(0, g.secs * 1000 - (Date.now() - start));
-    const t = document.getElementById('timer'); if (t) { t.textContent = Math.ceil(left / 1000) + ' 秒'; t.classList.toggle('low', left < 10000); }
-    const b = document.getElementById('tbar'); if (b) b.style.width = (100 * left / (g.secs * 1000)) + '%';
-  } else if (g.ph === 'in') { const t = document.getElementById('timer'); if (t) t.textContent = '不限時'; }
+  if (g.ph === 'cd') updateFx();
+  if (g.ph === 'in') {
+    const t = document.getElementById('timer');
+    if (g.secs) {
+      const start = S.seenAt[g.k] || Date.now(), left = Math.max(0, g.secs * 1000 - (Date.now() - start)), low = left < 10000;
+      if (t) { t.innerHTML = Math.ceil(left / 1000) + '<small>秒</small>'; t.classList.toggle('low', low); }
+      const b = document.getElementById('tbar'); if (b) b.style.width = (100 * left / (g.secs * 1000)) + '%';
+      const bw = document.getElementById('tbarw'); if (bw) bw.classList.toggle('low', low);
+    } else if (t) t.innerHTML = '<small>不限時</small>';
+  }
   if (g.ph === 'res') {
     if (!S.seenAt['res' + g.k]) S.seenAt['res' + g.k] = Date.now();
-    const b = document.getElementById('nbar'); if (b) b.style.width = Math.min(100, 100 * (Date.now() - S.seenAt['res' + g.k]) / RES_MS) + '%';
+    const el = Date.now() - S.seenAt['res' + g.k];
+    const b = document.getElementById('nbar'); if (b) b.style.width = Math.min(100, 100 * el / RES_MS) + '%';
+    const t = document.getElementById('ntimer'); if (t) t.innerHTML = Math.max(0, Math.ceil((RES_MS - el) / 1000)) + '<small>秒後下一輪</small>';
   }
 }
 setInterval(() => { if (S.isHost) hostTick(); tickUI(); }, 250);
 
+/* ---------- full-screen moments: 3-2-1 and the meet ---------- */
+const fx = { el: document.getElementById('fx'), t: document.getElementById('fxt'), s: document.getElementById('fxs'), mode: null, n: 0, wonKey: null, timer: null };
+function fxHide() {
+  if (fx.el.hidden) { fx.mode = null; return; }
+  fx.mode = null; fx.el.classList.add('out');
+  setTimeout(() => { if (!fx.mode) { fx.el.hidden = true; fx.el.className = 'fx'; } }, 300);
+}
+function updateFx() {
+  const g = S.g, ph = S.view === 'room' && g ? g.ph : null;
+  if (ph === 'cd') {
+    const el = Date.now() - (S.seenAt['cd' + g.k] || Date.now());
+    const n = Math.max(1, Math.min(3, 3 - Math.floor(el / 1000)));
+    if (fx.mode !== 'cd' || fx.n !== n) {
+      fx.mode = 'cd'; fx.n = n; fx.el.hidden = false; fx.el.className = 'fx cd n' + n;
+      fx.t.textContent = n; fx.t.style.removeProperty('--n'); fx.s.textContent = '準備';
+      fx.t.classList.remove('pop'); void fx.t.offsetWidth; fx.t.classList.add('pop');
+    }
+  } else if (fx.mode === 'cd') {
+    if (ph === 'in') {
+      fx.mode = 'go'; fx.el.className = 'fx cd go'; fx.t.textContent = '開始'; fx.s.textContent = '';
+      fx.t.classList.remove('pop'); void fx.t.offsetWidth; fx.t.classList.add('pop');
+      clearTimeout(fx.timer); fx.timer = setTimeout(() => { if (fx.mode === 'go') fxHide(); }, 650);
+    } else fxHide();
+  }
+  if (ph === 'win') {
+    if (fx.wonKey !== S.code + g.k) { const e = entryFor(g.gid, g.r); if (e) { fx.wonKey = S.code + g.k; playWin(e, g); } }
+  } else if (fx.mode === 'win') fxHide();
+  if (!ph && fx.mode) fxHide();
+}
+function playWin(e, g) {
+  const word = winWord(e);
+  fx.mode = 'win'; fx.el.hidden = false; fx.el.className = 'fx win pre';
+  fx.t.classList.remove('pop'); fx.t.textContent = word; fx.t.style.setProperty('--n', Math.max(2, vlen(word)).toFixed(1));
+  fx.s.textContent = e.hd ? '全員通關' : `第 ${g.r} 輪，相遇`;
+  void fx.el.offsetWidth; fx.el.classList.remove('pre');
+  clearTimeout(fx.timer);
+  setTimeout(() => { if (fx.mode === 'win') { fx.el.classList.add('hit'); confetti(); } }, reduced() ? 0 : 720);
+  fx.timer = setTimeout(() => { if (fx.mode === 'win') fxHide(); }, 3400);
+}
+fx.el.addEventListener('click', () => { if (fx.mode === 'win') fxHide(); });
+
+let confRaf = 0;
+function confetti() {
+  if (reduced()) return;
+  const c = document.getElementById('confetti'), ctx = c.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = window.innerWidth, H = window.innerHeight; c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cols = ['#FF4F8B', '#FFD43B', '#FFFFFF', '#2EE6A6', '#FF4220'], parts = [], sp = Math.max(9, Math.min(22, H / 42));
+  const add = (x, y, ang, v, delay) => parts.push({ x, y, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v, w: 6 + Math.random() * 8, h: 4 + Math.random() * 8, r: Math.random() * 6.3, vr: (Math.random() - .5) * .4, c: cols[parts.length % cols.length], round: Math.random() < .3, delay });
+  const r0 = Math.min(W, H) * .33;
+  for (let i = 0; i < 90; i++) { const a = Math.random() * Math.PI * 2; add(W * .5 + Math.cos(a) * r0, H * .47 + Math.sin(a) * r0, a, sp * (.35 + Math.random() * .8), 0); }
+  for (let i = 0; i < 70; i++) { add(-10, H * .8, -Math.PI / 2 + .25 + Math.random() * .7, sp * (.8 + Math.random() * .7), 12); add(W + 10, H * .8, -Math.PI / 2 - .25 - Math.random() * .7, sp * (.8 + Math.random() * .7), 12); }
+  for (let i = 0; i < 80; i++) { add(Math.random() * W, -20 - Math.random() * H * .5, Math.PI / 2 + (Math.random() - .5) * .4, 2 + Math.random() * 3, 50 + Math.random() * 60); }
+  let f = 0; cancelAnimationFrame(confRaf);
+  const step = () => {
+    f++; ctx.clearRect(0, 0, W, H); let alive = 0;
+    for (const p of parts) {
+      if (f < p.delay) { alive++; continue; }
+      p.vy += .32; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      if (p.y > H + 30) continue; alive++;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
+      if (p.round) { ctx.beginPath(); ctx.arc(0, 0, p.w / 2, 0, 6.3); ctx.fill(); } else ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 1.7)) + 1);
+      ctx.restore();
+    }
+    if (alive && f < 520) confRaf = requestAnimationFrame(step); else ctx.clearRect(0, 0, W, H);
+  };
+  confRaf = requestAnimationFrame(step);
+}
+
+/* ---------- keepsake image ---------- */
+const card = { url: null, blob: null };
+function fitText(ctx, text, weight, family, max, maxW) { let s = max; do { ctx.font = `${weight} ${s}px ${family}`; if (ctx.measureText(text).width <= maxW) break; s -= 4; } while (s > 28); return s; }
+function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function clip1(ctx, text, maxW) { if (ctx.measureText(text).width <= maxW) return text; let t = text; while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t + '…'; }
+async function drawCard() {
+  const g = S.g, e = entryFor(g.gid, g.r); if (!e) return null;
+  const FB = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif', FD = '"Unbounded",' + FB;
+  const word = winWord(e), n = Object.keys(e.w).length, gc = groupColors(e);
+  const rounds = Object.values(S.hist).filter(h => h.g === g.gid).sort((a, b) => a.r - b.r);
+  try { await Promise.race([Promise.all([document.fonts.load('900 80px "Noto Sans TC"', '同詞相遇' + word), document.fonts.load('700 40px "Noto Sans TC"', '第輪個人在相遇了')]), sleep(1500)]); } catch (x) {}
+  const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; const ctx = c.getContext('2d');
+  ctx.fillStyle = '#2A2DE0'; ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = .18; ctx.fillStyle = '#FF4F8B'; ctx.beginPath(); ctx.arc(-60, -40, 420, 0, 6.3); ctx.fill();
+  ctx.fillStyle = '#FFD43B'; ctx.beginPath(); ctx.arc(W + 80, H + 40, 440, 0, 6.3); ctx.fill(); ctx.globalAlpha = 1;
+  // header
+  ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.font = `900 46px ${FB}`; ctx.fillText('同詞相遇', 72, 108);
+  const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  ctx.textAlign = 'right'; ctx.font = `700 30px ${FD}`; ctx.globalAlpha = .85; ctx.fillText(date, W - 72, 106); ctx.globalAlpha = 1;
+  // measure the block, then centre it between header and footer
+  const show = rounds.slice(-5), cut = rounds.length - show.length, rowH = 62, px = 72, pw = W - 144, ph2 = 56 + show.length * rowH + (cut ? 40 : 0);
+  const names = Object.keys(e.w).map(id => (e.nm && e.nm[id]) || nameOf(id)), maxW = W - 160;
+  ctx.font = `700 32px ${FB}`; let lineTxt = '', lines = [];
+  for (const nm of names) { const t = lineTxt ? lineTxt + '、' + nm : nm; if (ctx.measureText(t).width > maxW && lineTxt) { lines.push(lineTxt); lineTxt = nm; } else lineTxt = t; }
+  if (lineTxt) lines.push(lineTxt);
+  const R = 220, top = 160, fixedH = 2 * R + 95 + 45 + ph2 + 60, roomL = Math.max(1, Math.floor((H - 96 - top - fixedH) / 46) + 1);
+  if (lines.length > roomL) { lines = lines.slice(0, roomL); lines[roomL - 1] = clip1(ctx, lines[roomL - 1], maxW - 200) + ` 等 ${names.length} 人`; }
+  const blockH = fixedH + (lines.length - 1) * 46 + 12, oy = top + Math.max(0, (H - 96 - top - blockH) / 2);
+  // venn
+  const cy = oy + R, off = 112, cx = W / 2;
+  ctx.fillStyle = '#FF4F8B'; ctx.beginPath(); ctx.arc(cx - off, cy, R, 0, 6.3); ctx.fill();
+  ctx.fillStyle = '#FFD43B'; ctx.beginPath(); ctx.arc(cx + off, cy, R, 0, 6.3); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(cx - off, cy, R, 0, 6.3); ctx.clip(); ctx.fillStyle = '#FF4220'; ctx.beginPath(); ctx.arc(cx + off, cy, R, 0, 6.3); ctx.fill(); ctx.restore();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const fs = fitText(ctx, word, 900, FD, 180, 620);
+  ctx.fillStyle = '#11123B'; ctx.fillText(word, cx, cy + fs * .07 + 4); ctx.fillStyle = '#fff'; ctx.fillText(word, cx, cy + 4);
+  // headline
+  ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#fff'; ctx.font = `900 54px ${FB}`;
+  ctx.fillText(e.hd ? `${n} 個人在第 ${g.r} 輪全員通關` : `${gc.max === n ? n + ' 個人' : gc.max + ' / ' + n + ' 人'}在第 ${g.r} 輪相遇了`, cx, oy + 2 * R + 95);
+  // the road here
+  const py = oy + 2 * R + 95 + 45;
+  ctx.fillStyle = '#fff'; rr(ctx, px, py, pw, ph2, 36); ctx.fill();
+  let y = py + 74; ctx.textAlign = 'left';
+  if (cut) { ctx.fillStyle = '#5D6092'; ctx.font = `500 28px ${FB}`; ctx.fillText(`前 ${cut} 輪省略`, px + 40, y - 14); y += 40; }
+  for (const h of show) {
+    const last = h.r === g.r;
+    ctx.fillStyle = last ? '#D62E69' : '#5D6092'; ctx.font = `700 30px ${FB}`; ctx.fillText(`第 ${h.r} 輪`, px + 40, y);
+    const gl = groups(h).list, txt = gl.map(x => x.word + (x.ids.length > 1 ? ' ×' + x.ids.length : '')).join('　');
+    ctx.fillStyle = last ? '#D62E69' : '#11123B'; ctx.font = `${last ? 900 : 700} 34px ${FB}`; ctx.fillText(clip1(ctx, txt || '（沒有人寫）', pw - 230), px + 190, y);
+    y += rowH;
+  }
+  // who was there
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = `700 32px ${FB}`;
+  let ny = py + ph2 + 60;
+  for (const l of lines) { ctx.fillText(l, cx, ny); ny += 46; }
+  ctx.globalAlpha = .8; ctx.font = `500 26px ${FB}`; ctx.fillText(S.mode === 'mqtt' && location.host ? location.host + location.pathname.replace(/index\.html$/, '') : '同詞相遇・連線版', cx, H - 48); ctx.globalAlpha = 1;
+  return c;
+}
+async function openCard() {
+  const m = document.getElementById('modal');
+  let c; try { c = await drawCard(); } catch (x) { c = null; }
+  if (!c) { toast('圖片產生失敗，再試一次'); return; }
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  if (card.url) URL.revokeObjectURL(card.url);
+  card.blob = blob; card.url = blob ? URL.createObjectURL(blob) : c.toDataURL('image/png');
+  const file = blob && typeof File === 'function' ? new File([blob], 'tongci.png', { type: 'image/png' }) : null;
+  let canShare = false; try { canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] })); } catch (x) {}
+  card.file = file;
+  const canDl = S.mode !== 'room';
+  m.innerHTML = `<div class="box" role="dialog" aria-label="紀念圖"><img src="${card.url}" alt="這一場的紀念圖">
+    <div class="acts" style="margin-top:14px">${canDl ? `<a class="btn primary center" style="text-decoration:none;display:grid;place-items:center" href="${card.url}" download="${esc('同詞相遇-' + (winWord(entryFor(S.g.gid, S.g.r)) || '紀念').replace(/[\\/:*?"<>|／…]/g, '-'))}.png">下載圖片</a>` : ''}${canShare ? `<button class="btn pink" data-a="share">分享</button>` : ''}<button class="btn" data-a="mclose">關閉</button></div>
+    <p class="mut center" style="margin-top:10px">${canDl ? '手機也可以長按圖片儲存' : '長按或右鍵點圖片就能儲存'}</p></div>`;
+  m.hidden = false;
+}
+function closeCard() { document.getElementById('modal').hidden = true; }
+
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
+  if (e.target.id === 'modal') { closeCard(); return; }
   const b = e.target.closest('[data-a]'); if (!b) return;
   const a = b.dataset.a;
-  if (a === 'cap-' || a === 'cap+') { const n = document.getElementById('name'); if (n) S.name = n.value; S.cap = Math.max(2, Math.min(MAXCAP, S.cap + (a === 'cap+' ? 1 : -1))); render(); }
-  else if (a === 'secs') { const n = document.getElementById('name'); if (n) S.name = n.value; S.secs = +b.dataset.v; render(); }
-  else if (a === 'create') enter(rid(4), true);
+  if (a === 'create') enter(rid(4), true);
   else if (a === 'join') { const c = (document.getElementById('code').value || '').trim().toLowerCase(); enter(c, false); }
-  else if (a === 'clearhash') { e.preventDefault(); try { history.replaceState(null, '', location.pathname + location.search); } catch (x) {} render(); }
+  else if (a === 'clearhash') { try { history.replaceState(null, '', location.pathname + location.search); } catch (x) {} const c = document.getElementById('code'); if (c) c.value = ''; render(); }
   else if (a === 'leave') leave();
   else if (a === 'copy') copyCode();
   else if (a === 'hcap-' || a === 'hcap+') setOpt('cap', Math.max(2, Math.min(MAXCAP, S.hg.cap + (a === 'hcap+' ? 1 : -1))));
-  else if (a === 'hsecs') setOpt('secs', +b.dataset.v);
+  else if (a === 'hsecs') { S.customSecs = false; setOpt('secs', +b.dataset.v); render(); }
+  else if (a === 'hcustom') { S.customSecs = true; if (S.hg && !S.hg.secs) setOpt('secs', 45); render(); const i = document.getElementById('csecs'); if (i) { i.focus(); i.select(); } }
   else if (a === 'hwr') setOpt('wr', b.dataset.v);
   else if (a === 'start' || a === 'again') startGame();
   else if (a === 'lobby') toLobby();
   else if (a === 'next') nextRound();
   else if (a === 'pend') togglePend(b.dataset.id);
   else if (a === 'declare') declareWin();
+  else if (a === 'declare-prev') { if (Date.now() - S.cfm < 4000) { S.cfm = 0; declareWin(); } else { S.cfm = Date.now(); b.textContent = '再按一次，確定宣布上一輪全員通關'; } }
   else if (a === 'submit') submitWord();
   else if (a === 'unsub') unsubmit();
+  else if (a === 'card') openCard();
+  else if (a === 'mclose') closeCard();
+  else if (a === 'share') { if (card.file && navigator.share) navigator.share({ files: [card.file], title: '同詞相遇' }).catch(() => {}); }
 });
+function applyCustomSecs(el) { const v = Math.max(5, Math.min(600, Math.round(+el.value || 0))); el.value = v; setOpt('secs', v); }
 document.addEventListener('keydown', e => {
-  if (e.key !== 'Enter' || e.isComposing || S.view !== 'home') return;
-  if (e.target && e.target.id === 'code') { e.preventDefault(); document.querySelector('[data-a="join"]').click(); }
+  if (e.key === 'Escape') { closeCard(); if (fx.mode === 'win') fxHide(); return; }
+  if (e.key !== 'Enter' || e.isComposing) return;
+  const t = e.target; if (!t) return;
+  if (t.id === 'csecs') { e.preventDefault(); t.blur(); }
+  else if (t.dataset && t.dataset.a === 'pend' && t.tagName === 'LI') togglePend(t.dataset.id);
+  else if (S.view === 'home' && (t.id === 'code' || t.id === 'name')) { e.preventDefault(); const j = document.querySelector('[data-a="join"]'), c = document.querySelector('[data-a="create"]'); const code = document.getElementById('code'); if (j && code && code.value.trim()) j.click(); else if (c) c.click(); else if (j) j.click(); }
 });
 document.addEventListener('input', e => {
-  if (e.target.id === 'capr' || e.target.id === 'hcapr') { const b = e.target.parentNode.querySelector('.stepper b'); if (b) b.textContent = e.target.value; }
+  if (e.target.id === 'hcapr') { const b = e.target.parentNode.querySelector('.stepper b'); if (b) b.textContent = e.target.value; }
 });
 document.addEventListener('change', e => {
-  if (e.target.id === 'capr') { const n = document.getElementById('name'); if (n) S.name = n.value; S.cap = +e.target.value; render(); }
-  else if (e.target.id === 'hcapr') setOpt('cap', +e.target.value);
+  if (e.target.id === 'hcapr') setOpt('cap', +e.target.value);
+  else if (e.target.id === 'csecs') applyCustomSecs(e.target);
 });
 window.addEventListener('hashchange', () => { if (S.view === 'home') render(); });
 render();
