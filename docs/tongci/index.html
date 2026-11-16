@@ -600,7 +600,7 @@ function renderHome() {
   </div></section>
   <ol class="how">
     <li>每一輪，所有人同時寫下一個詞，寫完一起揭曉。</li>
-    <li>看看大家寫了什麼，下一輪往彼此的中間靠。</li>
+    <li>看看大家寫了什麼，下一輪寫一個跟這些詞都有關的詞。</li>
     <li>所有人寫出同一個詞，就相遇了。</li>
     <li class="note">不能討論、不能暗示，只能靠默契。人數、時間和過關條件，進房間後由房主設定。</li>
   </ol>`;
@@ -736,7 +736,7 @@ function stageHTML() {
     return `<div class="card">
       <div class="rhead"><h2>第 ${g.r} 輪</h2><div class="timer" id="timer"></div></div>
       ${g.secs ? '<div class="bar" id="tbarw"><i id="tbar"></i></div>' : ''}
-      ${prev ? `<p class="prompt">上一輪大家寫了這些，往中間靠</p>${wordChips(prev, pc)}` : `<p class="prompt">第一輪沒有線索，想到什麼寫什麼</p>`}
+      ${prev ? `<p class="prompt">上一輪大家寫了這些，這輪想一個跟它們都有關的詞</p>${wordChips(prev, pc)}` : `<p class="prompt">第一輪沒有線索，想到什麼寫什麼</p>`}
       ${body}
       <div class="prog"><span id="substat"></span><div class="bar"><i id="pbar"></i></div></div>
       ${S.isHost && prev ? `<button class="linkbtn" data-a="declare-prev">上一輪其實意思一樣？宣布全員通關</button>` : ''}
