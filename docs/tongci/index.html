@@ -55,6 +55,8 @@ button,input{font-family:inherit}
 .btn.small{min-height:36px;font-size:14px;padding:6px 14px;border-radius:12px;box-shadow:0 3px 0 var(--line)}
 .btn.small.primary{box-shadow:0 3px 0 var(--yd)}
 .btn:disabled{opacity:.45;cursor:default}
+.linkbtn.quiet{display:block;margin:20px auto 0;padding:8px 4px;color:var(--mut);font-size:13px;font-weight:500;text-decoration-color:var(--line)}
+.linkbtn.quiet.armed{color:var(--pd);font-weight:700;text-decoration-color:currentColor}
 .linkbtn{appearance:none;border:0;background:none;color:var(--bg);font-size:14px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:10px 0 0}
 
 /* fields */
@@ -751,7 +753,7 @@ function stageHTML() {
       ${prev ? `<div style="margin-top:16px">${wordChips(prev, pc)}</div>` : `<p class="prompt">第一輪沒有線索，想到什麼寫什麼</p>`}
       ${body}
       <div class="prog"><span id="substat"></span><div class="bar"><i id="pbar"></i></div></div>
-      ${S.isHost && prev ? `<button class="linkbtn" data-a="declare-prev">上一輪其實意思一樣？宣布全員通關</button>` : ''}
+      ${S.isHost && prev ? `<button class="linkbtn quiet" data-a="declare-prev">上一輪其實意思一樣？宣布全員通關</button>` : ''}
     </div>`;
   }
   if (g.ph === 'rv') return `<div class="card center"><h2>第 ${g.r} 輪揭曉中</h2><p class="mut" style="margin-top:6px">正在收大家的詞</p></div>`;
@@ -775,7 +777,7 @@ function stageHTML() {
   return `<div class="card"><div class="rhead"><h2>第 ${g.r} 輪結果</h2><div class="timer" id="ntimer"></div></div>
     <div class="bar"><i id="nbar"></i></div>
     <p class="prompt">${summary}</p>${cards}
-    ${S.isHost ? `<div class="acts"><button class="btn pink" data-a="declare">意思一樣，宣布全員通關</button><button class="btn" data-a="next">直接下一輪</button></div>`
+    ${S.isHost ? `<div class="acts"><button class="btn" data-a="next">直接下一輪</button></div><button class="linkbtn quiet" data-a="declare">大家意思一樣？宣布全員通關</button>`
       : `<p class="mut" style="margin-top:16px">如果大家寫的意思一樣，房主可以直接宣布通關。</p>`}</div>`;
 }
 
@@ -1071,8 +1073,13 @@ document.addEventListener('click', e => {
   else if (a === 'lobby') toLobby();
   else if (a === 'next') nextRound();
   else if (a === 'pend') togglePend(b.dataset.id);
-  else if (a === 'declare') declareWin();
-  else if (a === 'declare-prev') { if (Date.now() - S.cfm < 4000) { S.cfm = 0; declareWin(); } else { S.cfm = Date.now(); b.textContent = '再按一次，確定宣布上一輪全員通關'; } }
+
+  else if (a === 'declare' || a === 'declare-prev') { // two taps within 4 s, so a stray tap can't end the game
+    if (b.classList.contains('armed') && Date.now() - S.cfm < 4000) { S.cfm = 0; declareWin(); return; }
+    S.cfm = Date.now(); const orig = b.textContent; b.classList.add('armed');
+    b.textContent = a === 'declare' ? '再按一次，確定宣布全員通關' : '再按一次，確定宣布上一輪全員通關';
+    setTimeout(() => { if (b.isConnected && b.classList.contains('armed')) { b.classList.remove('armed'); b.textContent = orig; } }, 4000);
+  }
   else if (a === 'submit') submitWord();
   else if (a === 'unsub') unsubmit();
   else if (a === 'card') openCard();
