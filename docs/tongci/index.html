@@ -736,7 +736,7 @@ function stageHTML() {
     return `<div class="card">
       <div class="rhead"><h2>第 ${g.r} 輪</h2><div class="timer" id="timer"></div></div>
       ${g.secs ? '<div class="bar" id="tbarw"><i id="tbar"></i></div>' : ''}
-      ${prev ? `<p class="prompt">上一輪大家寫了這些，這輪想一個跟它們都有關的詞</p>${wordChips(prev, pc)}` : `<p class="prompt">第一輪沒有線索，想到什麼寫什麼</p>`}
+      ${prev ? `<div style="margin-top:16px">${wordChips(prev, pc)}</div>` : `<p class="prompt">第一輪沒有線索，想到什麼寫什麼</p>`}
       ${body}
       <div class="prog"><span id="substat"></span><div class="bar"><i id="pbar"></i></div></div>
       ${S.isHost && prev ? `<button class="linkbtn" data-a="declare-prev">上一輪其實意思一樣？宣布全員通關</button>` : ''}
