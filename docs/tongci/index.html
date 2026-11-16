@@ -197,6 +197,18 @@ input::placeholder{color:#9A9CC4}
 @keyframes flash{0%{background:#fff}100%{background:var(--bg2)}}
 @keyframes thump{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
 #confetti{position:fixed;inset:0;width:100%;height:100%;z-index:60;pointer-events:none}
+#bdf{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;opacity:.85;transition:opacity .5s}
+#bdf.out,#bdbig.out{opacity:0}
+.fx .venn,.fx p{z-index:1}
+.fx p{position:relative}
+#bdbig{position:absolute;left:50%;top:max(5vh,calc(50% - min(72vw,56vh,520px) / 3.24 - 1.75 * min(15vw,13vh,130px) - 24px));transform:translateX(-50%);z-index:2;white-space:nowrap;font-weight:900;font-size:min(14vw,12vh,128px);line-height:1.1;color:#fff;text-shadow:0 .07em 0 var(--pd),0 .14em 0 var(--ink);animation:bigpulse .9s cubic-bezier(.3,1.6,.5,1) infinite alternate;pointer-events:none;transition:opacity .5s}
+#bdbig small{display:block;text-align:center;font-size:.3em;color:var(--y);text-shadow:0 .1em 0 var(--ink);margin-top:.15em;letter-spacing:.05em}
+#bdf .w{position:absolute;left:0;top:0;white-space:nowrap;font-weight:900;line-height:1;will-change:transform,opacity;text-shadow:0 .08em 0 rgba(17,18,59,.55);animation:rise var(--d,4s) cubic-bezier(.25,.6,.4,1) forwards}
+#bdf .w.pop{animation:popin var(--d,1.6s) cubic-bezier(.3,1.6,.5,1) forwards}
+@keyframes bigpulse{from{transform:translateX(-50%) scale(.94) rotate(-2deg)}to{transform:translateX(-50%) scale(1.06) rotate(2deg)}}
+@keyframes rise{0%{transform:translate(var(--x),110vh) rotate(var(--r0));opacity:0}8%{opacity:1}100%{transform:translate(calc(var(--x) + var(--sx)),-20vh) rotate(var(--r1));opacity:1}}
+@keyframes popin{0%{transform:translate(var(--x),var(--y)) scale(0) rotate(var(--r0));opacity:0}25%{transform:translate(var(--x),var(--y)) scale(1.15) rotate(var(--r1));opacity:1}75%{opacity:1}100%{transform:translate(var(--x),var(--y)) scale(.9) rotate(var(--r1));opacity:0}}
+.bdayline{display:inline-block;margin-top:10px;background:var(--p);color:#fff;font-weight:900;font-size:20px;padding:6px 18px;border-radius:999px;box-shadow:0 4px 0 var(--pd);animation:pop .5s cubic-bezier(.3,1.6,.5,1) both}
 
 /* keepsake image */
 .modal{position:fixed;inset:0;z-index:70;background:rgba(17,18,59,.72);display:flex;align-items:center;justify-content:center;padding:16px}
@@ -233,7 +245,7 @@ input::placeholder{color:#9A9CC4}
 </head>
 <body>
 <div id="app" class="wrap"></div>
-<div id="fx" class="fx" hidden><div class="venn"><i class="c1"></i><i class="c2"></i><b id="fxt"></b></div><p id="fxs"></p></div>
+<div id="fx" class="fx" hidden><div id="bdf" hidden></div><div id="bdbig" hidden></div><div class="venn"><i class="c1"></i><i class="c2"></i><b id="fxt"></b></div><p id="fxs"></p></div>
 <canvas id="confetti"></canvas>
 <div id="modal" class="modal" hidden></div>
 <div id="toast" class="toast" role="status"></div>
@@ -753,7 +765,7 @@ function stageHTML() {
   if (g.ph === 'win') {
     const word = winWord(e), len = Math.max(2, vlen(word));
     const line = e.hd ? `房主宣布意思一樣，第 ${g.r} 輪全員通關` : `${gc.max === n ? n + ' 個人' : gc.max + ' / ' + n + ' 人'}在第 ${g.r} 輪相遇了`;
-    return `<div class="card"><div class="winhero"><div class="venn"><i class="c1"></i><i class="c2"></i><b style="font-size:min(${(62 / len).toFixed(1)}vw,${Math.round(300 / len)}px,84px)">${esc(word)}</b></div><p class="line">${line}</p></div>
+    return `<div class="card"><div class="winhero"><div class="venn"><i class="c1"></i><i class="c2"></i><b style="font-size:min(${(62 / len).toFixed(1)}vw,${Math.round(300 / len)}px,84px)">${esc(word)}</b></div><p class="line">${line}</p>${isBday(e) ? '<div class="bdayline">生日快樂！！</div>' : ''}</div>
       ${cards}
       <div class="acts">${S.isHost ? `<button class="btn primary" data-a="again">再玩一次</button>` : ''}<button class="btn pink" data-a="card">下載紀念圖</button>${S.isHost ? `<button class="btn" data-a="lobby">回大廳改設定</button>` : ''}</div>
       ${S.isHost ? '' : `<p class="mut center" style="margin-top:14px">等房主開下一場</p>`}</div>`;
@@ -838,6 +850,14 @@ function tickUI() {
 }
 setInterval(() => { if (S.isHost) hostTick(); tickUI(); }, 250);
 
+/* ---------- 11/17 easter egg ---------- */
+const BDAY = { m: 11, d: 17, h: [1265932629, 3278634848] };
+const fnv = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; };
+function isBday(e) {
+  const d = new Date(); if (d.getMonth() + 1 !== BDAY.m || d.getDate() !== BDAY.d || !e) return false;
+  const top = groups(e).list[0]; return !!top && BDAY.h.includes(fnv(top.k));
+}
+
 /* ---------- full-screen moments: 3-2-1 and the meet ---------- */
 const fx = { el: document.getElementById('fx'), t: document.getElementById('fxt'), s: document.getElementById('fxs'), mode: null, n: 0, wonKey: null, timer: null };
 function fxHide() {
@@ -864,46 +884,96 @@ function updateFx() {
   }
   if (ph === 'win') {
     if (fx.wonKey !== S.code + g.k) { const e = entryFor(g.gid, g.r); if (e) { fx.wonKey = S.code + g.k; playWin(e, g); } }
-  } else if (fx.mode === 'win') fxHide();
+  } else { if (fx.mode === 'win') fxHide(); if (bdayOn) bdayStop(); }
   if (!ph && fx.mode) fxHide();
 }
 function playWin(e, g) {
   const word = winWord(e);
   fx.mode = 'win'; fx.el.hidden = false; fx.el.className = 'fx win pre';
   fx.t.classList.remove('pop'); fx.t.textContent = word; fx.t.style.setProperty('--n', Math.max(2, vlen(word)).toFixed(1));
+  const bd = isBday(e);
   fx.s.textContent = e.hd ? '全員通關' : `第 ${g.r} 輪，相遇`;
   void fx.el.offsetWidth; fx.el.classList.remove('pre');
   clearTimeout(fx.timer);
-  setTimeout(() => { if (fx.mode === 'win') { fx.el.classList.add('hit'); confetti(); } }, reduced() ? 0 : 720);
-  fx.timer = setTimeout(() => { if (fx.mode === 'win') fxHide(); }, 3400);
+  setTimeout(() => { if (fx.mode === 'win') { fx.el.classList.add('hit'); confetti(); if (bd) bdayShow(); } }, reduced() ? 0 : 720);
+  fx.timer = setTimeout(() => { if (fx.mode === 'win' && !bdayOn) fxHide(); }, 3400);
 }
-fx.el.addEventListener('click', () => { if (fx.mode === 'win') fxHide(); });
+fx.el.addEventListener('click', () => { if (bdayOn) bdayStop(); else if (fx.mode === 'win') fxHide(); });
 
-let confRaf = 0;
+let bdayOn = false, bdayT = [];
+function bdayShow() {
+  const fl = document.getElementById('bdf'), big = document.getElementById('bdbig');
+  bdayStop(true); bdayOn = true;
+  clearTimeout(fx.timer);
+  fl.hidden = false; fl.className = ''; fl.innerHTML = '';
+  big.hidden = false; big.className = ''; big.innerHTML = '生日快樂！！<small>Happy Birthday</small>';
+  const W = innerWidth, H = innerHeight, cols = ['#FFFFFF', '#FFD43B', '#FF4F8B', '#2EE6A6', '#FFB3CF', '#FFE98A'];
+  const R = (a, b) => a + Math.random() * (b - a);
+  const spawn = pop => {
+    if (fl.childElementCount > 170) return;
+    const w = document.createElement('div'); w.className = 'w' + (pop ? ' pop' : '');
+    const r = Math.random();
+    w.textContent = r < .12 ? '🎂 生日快樂！！' : (r < .24 ? '生日快樂！！🎉' : '生日快樂！！');
+    const fs = pop ? R(18, Math.min(68, W / 6.5)) : R(14, Math.min(60, W / 7.5));
+    w.style.fontSize = fs + 'px'; w.style.color = cols[(Math.random() * cols.length) | 0];
+    w.style.setProperty('--x', R(-fs * 2.5, W - fs * 2.5) + 'px');
+    w.style.setProperty('--y', R(0, H - fs) + 'px');
+    w.style.setProperty('--sx', R(-90, 90) + 'px');
+    w.style.setProperty('--r0', R(-25, 25) + 'deg'); w.style.setProperty('--r1', R(-25, 25) + 'deg');
+    w.style.setProperty('--d', (pop ? R(1.2, 2.1) : R(3, 5.5)) + 's');
+    w.addEventListener('animationend', () => w.remove());
+    fl.appendChild(w);
+  };
+  if (reduced()) {
+    for (let i = 0; i < 45; i++) spawn(true);
+    bdayT.push(setTimeout(() => bdayStop(), 6000));
+    return;
+  }
+  const start = Date.now();
+  for (let i = 0; i < 36; i++) spawn(i % 2 === 0);
+  const iv = setInterval(() => { if (Date.now() - start > 9000) { clearInterval(iv); return; } for (let i = 0; i < 7; i++) spawn(Math.random() < .45); }, 160);
+  bdayT.push(iv);
+  for (let k = 1; k <= 7; k++) bdayT.push(setTimeout(() => { if (bdayOn) confetti(); }, k * 1250));
+  bdayT.push(setTimeout(() => bdayStop(), 11500));
+}
+function bdayStop(quiet) {
+  bdayT.forEach(t => { clearTimeout(t); clearInterval(t); }); bdayT = [];
+  const fl = document.getElementById('bdf'), big = document.getElementById('bdbig');
+  const was = bdayOn; bdayOn = false;
+  const clear = () => { fl.hidden = true; fl.innerHTML = ''; fl.className = ''; big.hidden = true; big.className = ''; };
+  if (quiet || fl.hidden) { clear(); return; }
+  fl.classList.add('out'); big.classList.add('out');
+  if (was && fx.mode === 'win') fxHide();
+  setTimeout(() => { if (!bdayOn) clear(); }, 520);
+}
+
+
+const conf = { parts: [], raf: 0, f: 0, W: 0, H: 0 };
 function confetti() {
   if (reduced()) return;
   const c = document.getElementById('confetti'), ctx = c.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1);
-  const W = window.innerWidth, H = window.innerHeight; c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const cols = ['#FF4F8B', '#FFD43B', '#FFFFFF', '#2EE6A6', '#FF4220'], parts = [], sp = Math.max(9, Math.min(22, H / 42));
-  const add = (x, y, ang, v, delay) => parts.push({ x, y, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v, w: 6 + Math.random() * 8, h: 4 + Math.random() * 8, r: Math.random() * 6.3, vr: (Math.random() - .5) * .4, c: cols[parts.length % cols.length], round: Math.random() < .3, delay });
+  const W = window.innerWidth, H = window.innerHeight;
+  if (!conf.raf || conf.W !== W || conf.H !== H) { c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); conf.W = W; conf.H = H; }
+  const cols = ['#FF4F8B', '#FFD43B', '#FFFFFF', '#2EE6A6', '#FF4220'], sp = Math.max(9, Math.min(22, H / 42)), parts = conf.parts;
+  const add = (x, y, ang, v, delay) => { if (parts.length < 900) parts.push({ x, y, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v, w: 6 + Math.random() * 8, h: 4 + Math.random() * 8, r: Math.random() * 6.3, vr: (Math.random() - .5) * .4, c: cols[(Math.random() * cols.length) | 0], round: Math.random() < .3, at: conf.f + delay }); };
   const r0 = Math.min(W, H) * .33;
   for (let i = 0; i < 90; i++) { const a = Math.random() * Math.PI * 2; add(W * .5 + Math.cos(a) * r0, H * .47 + Math.sin(a) * r0, a, sp * (.35 + Math.random() * .8), 0); }
   for (let i = 0; i < 70; i++) { add(-10, H * .8, -Math.PI / 2 + .25 + Math.random() * .7, sp * (.8 + Math.random() * .7), 12); add(W + 10, H * .8, -Math.PI / 2 - .25 - Math.random() * .7, sp * (.8 + Math.random() * .7), 12); }
   for (let i = 0; i < 80; i++) { add(Math.random() * W, -20 - Math.random() * H * .5, Math.PI / 2 + (Math.random() - .5) * .4, 2 + Math.random() * 3, 50 + Math.random() * 60); }
-  let f = 0; cancelAnimationFrame(confRaf);
+  if (conf.raf) return;
   const step = () => {
-    f++; ctx.clearRect(0, 0, W, H); let alive = 0;
-    for (const p of parts) {
-      if (f < p.delay) { alive++; continue; }
+    conf.f++; const f = conf.f; ctx.clearRect(0, 0, conf.W, conf.H);
+    conf.parts = conf.parts.filter(p => {
+      if (f < p.at) return true;
       p.vy += .32; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
-      if (p.y > H + 30) continue; alive++;
+      if (p.y > conf.H + 30 || f - p.at > 600) return false;
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
       if (p.round) { ctx.beginPath(); ctx.arc(0, 0, p.w / 2, 0, 6.3); ctx.fill(); } else ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 1.7)) + 1);
-      ctx.restore();
-    }
-    if (alive && f < 520) confRaf = requestAnimationFrame(step); else ctx.clearRect(0, 0, W, H);
+      ctx.restore(); return true;
+    });
+    if (conf.parts.length) conf.raf = requestAnimationFrame(step); else { ctx.clearRect(0, 0, conf.W, conf.H); conf.raf = 0; }
   };
-  confRaf = requestAnimationFrame(step);
+  conf.raf = requestAnimationFrame(step);
 }
 
 /* ---------- keepsake image ---------- */
@@ -945,6 +1015,7 @@ async function drawCard() {
   // headline
   ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#fff'; ctx.font = `900 54px ${FB}`;
   ctx.fillText(e.hd ? `${n} 個人在第 ${g.r} 輪全員通關` : `${gc.max === n ? n + ' 個人' : gc.max + ' / ' + n + ' 人'}在第 ${g.r} 輪相遇了`, cx, oy + 2 * R + 95);
+  if (isBday(e)) { ctx.save(); ctx.translate(W - 150, oy + 40); ctx.rotate(.18); ctx.fillStyle = '#FF4F8B'; rr(ctx, -150, -44, 300, 88, 44); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = `900 44px ${FB}`; ctx.textBaseline = 'middle'; ctx.fillText('生日快樂！！', 0, 3); ctx.restore(); ctx.textBaseline = 'alphabetic'; }
   // the road here
   const py = oy + 2 * R + 95 + 45;
   ctx.fillStyle = '#fff'; rr(ctx, px, py, pw, ph2, 36); ctx.fill();
@@ -1010,7 +1081,7 @@ document.addEventListener('click', e => {
 });
 function applyCustomSecs(el) { const v = Math.max(5, Math.min(600, Math.round(+el.value || 0))); el.value = v; setOpt('secs', v); }
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeCard(); if (fx.mode === 'win') fxHide(); return; }
+  if (e.key === 'Escape') { closeCard(); if (bdayOn) bdayStop(); if (fx.mode === 'win') fxHide(); return; }
   if (e.key !== 'Enter' || e.isComposing) return;
   const t = e.target; if (!t) return;
   if (t.id === 'csecs') { e.preventDefault(); t.blur(); }
